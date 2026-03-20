@@ -1,0 +1,7 @@
+Flask
+Flask-Cors
+requests
+beautifulsoup4
+playwright
+Pillow
+gunicorn

@@ -1,0 +1,1819 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>填色页工具</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f2f5; color: #333; min-height: 100vh;
+        }
+
+        /* ── 顶部栏 ── */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff; padding: 20px 0; text-align: center;
+            box-shadow: 0 2px 12px rgba(0,0,0,.15); position: relative;
+        }
+        .header h1 { font-size: 26px; font-weight: 700; letter-spacing: 1px; }
+        .header p { margin-top: 4px; opacity: .85; font-size: 13px; }
+
+        /* ── 步骤导航 ── */
+        .step-nav {
+            display: flex; justify-content: center; gap: 0; margin-top: 12px;
+        }
+        .step-nav .step {
+            padding: 8px 28px; font-size: 14px; font-weight: 600; cursor: pointer;
+            background: rgba(255,255,255,.15); color: rgba(255,255,255,.7);
+            border: none; transition: all .2s;
+        }
+        .step-nav .step:first-child { border-radius: 8px 0 0 8px; }
+        .step-nav .step:last-child { border-radius: 0 8px 8px 0; }
+        .step-nav .step:not(:first-child):not(:last-child) { border-radius: 0; }
+        .step-nav .step.active {
+            background: #fff; color: #667eea;
+        }
+        .step-nav .step:not(.active):hover {
+            background: rgba(255,255,255,.25);
+        }
+        .step-nav .step.disabled {
+            cursor: not-allowed; opacity: .5;
+        }
+
+        /* ── 容器 ── */
+        .container { max-width: 1400px; margin: 0 auto; padding: 24px 20px; }
+
+        /* ── 页面切换 ── */
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* ── 搜索区 ── */
+        .search-bar {
+            display: flex; gap: 10px;
+            background: #fff; padding: 16px 20px; border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.06);
+        }
+        .search-bar input {
+            flex: 1; padding: 12px 16px; border: 2px solid #e0e0e0; border-radius: 8px;
+            font-size: 15px; outline: none; transition: border-color .2s;
+        }
+        .search-bar input:focus { border-color: #667eea; }
+        .search-bar button {
+            padding: 12px 28px; background: #667eea; color: #fff; border: none;
+            border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;
+            transition: background .2s;
+        }
+        .search-bar button:hover { background: #5a6fd6; }
+        .search-bar button:disabled { background: #aaa; cursor: not-allowed; }
+
+        /* ── 信息+批量操作栏 ── */
+        .toolbar {
+            display: none; align-items: center; justify-content: space-between;
+            flex-wrap: wrap; gap: 10px;
+            background: #fff; padding: 14px 20px; border-radius: 12px; margin-top: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.06);
+        }
+        .toolbar.visible { display: flex; }
+        .toolbar .info { font-size: 14px; color: #666; }
+        .toolbar .info strong { color: #333; font-size: 16px; }
+        .toolbar .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .toolbar .actions button {
+            padding: 8px 16px; border: none; border-radius: 6px;
+            font-size: 13px; font-weight: 500; cursor: pointer; transition: background .2s;
+        }
+        .btn-select-all { background: #e8eaff; color: #667eea; }
+        .btn-select-all:hover { background: #d0d4ff; }
+        .btn-deselect { background: #f0f0f0; color: #666; }
+        .btn-deselect:hover { background: #e0e0e0; }
+        .btn-download-sel { background: #52c41a; color: #fff; }
+        .btn-download-sel:hover { background: #46a817; }
+        .btn-delete-sel { background: #ff4d4f; color: #fff; }
+        .btn-delete-sel:hover { background: #e0393b; }
+        .btn-confirm-sel { background: #fa8c16; color: #fff; }
+        .btn-confirm-sel:hover { background: #d87a10; }
+
+        /* ── 确认后提示条 ── */
+        .confirmed-bar {
+            display: none; align-items: center; justify-content: space-between;
+            flex-wrap: wrap; gap: 10px;
+            background: linear-gradient(135deg, #fffbe6 0%, #fff7e6 100%);
+            border: 1px solid #ffe58f; padding: 14px 20px; border-radius: 12px; margin-top: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.06);
+        }
+        .confirmed-bar.visible { display: flex; }
+        .confirmed-bar .confirmed-info { font-size: 15px; color: #ad6800; font-weight: 600; }
+        .confirmed-bar .confirmed-actions { display: flex; gap: 8px; }
+        .confirmed-bar .confirmed-actions button {
+            padding: 8px 16px; border: none; border-radius: 6px;
+            font-size: 13px; font-weight: 500; cursor: pointer; transition: background .2s;
+        }
+        .btn-undo-confirm { background: #f0f0f0; color: #666; }
+        .btn-undo-confirm:hover { background: #e0e0e0; }
+        .btn-import { background: #1890ff; color: #fff; }
+        .btn-import:hover { background: #0f7ae5; }
+
+        /* ── 加载状态 ── */
+        .status-msg {
+            display: none; text-align: center; padding: 40px 20px; font-size: 16px; color: #888;
+        }
+        .status-msg.visible { display: block; }
+        .spinner {
+            display: inline-block; width: 28px; height: 28px;
+            border: 3px solid #ddd; border-top-color: #667eea; border-radius: 50%;
+            animation: spin .7s linear infinite; vertical-align: middle; margin-right: 8px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── 图片画廊 ── */
+        .gallery {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 16px; margin-top: 16px;
+        }
+        .card {
+            background: #fff; border-radius: 10px; overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,.06);
+            transition: transform .15s, box-shadow .15s; position: relative;
+        }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,.12); }
+        .card.selected { outline: 3px solid #667eea; outline-offset: -3px; }
+        .card .img-wrap {
+            width: 100%; height: 200px; display: flex; align-items: center;
+            justify-content: center; background: #fafafa; overflow: hidden;
+        }
+        .card .img-wrap img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .card .img-wrap .loading-placeholder { color: #ccc; font-size: 13px; }
+        .card .card-body { padding: 10px 12px; }
+        .card .alt-name {
+            font-size: 12px; color: #888; white-space: nowrap;
+            overflow: hidden; text-overflow: ellipsis; margin-bottom: 8px; min-height: 18px;
+        }
+        .card .card-actions { display: flex; align-items: center; gap: 6px; }
+        .card .card-actions label {
+            display: flex; align-items: center; gap: 4px;
+            font-size: 12px; color: #888; cursor: pointer; margin-right: auto;
+        }
+        .card .card-actions input[type="checkbox"] {
+            width: 16px; height: 16px; accent-color: #667eea; cursor: pointer;
+        }
+        .card .card-actions button {
+            padding: 4px 10px; border: none; border-radius: 4px;
+            font-size: 12px; cursor: pointer; transition: background .2s;
+        }
+        .btn-dl { background: #e6f7ff; color: #1890ff; }
+        .btn-dl:hover { background: #bae7ff; }
+        .btn-del { background: #fff1f0; color: #ff4d4f; }
+        .btn-del:hover { background: #ffccc7; }
+
+        /* ── 加载更多 ── */
+        .load-more-bar { display: none; text-align: center; margin-top: 20px; padding-bottom: 20px; }
+        .load-more-bar.visible { display: block; }
+        .load-more-bar button {
+            padding: 12px 32px; border: none; border-radius: 8px;
+            font-size: 15px; font-weight: 600; cursor: pointer; margin: 0 8px;
+            transition: background .2s;
+        }
+        .btn-load-more { background: #667eea; color: #fff; }
+        .btn-load-more:hover { background: #5a6fd6; }
+        .btn-stop { background: #ff4d4f; color: #fff; }
+        .btn-stop:hover { background: #e0393b; }
+
+        /* ── 下一页按钮 ── */
+        .next-page-bar {
+            display: none; text-align: center; margin-top: 24px; padding-bottom: 40px;
+        }
+        .next-page-bar.visible { display: block; }
+        .btn-next-page {
+            padding: 14px 48px; background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff; border: none; border-radius: 10px; font-size: 17px;
+            font-weight: 700; cursor: pointer; letter-spacing: 1px;
+            box-shadow: 0 4px 16px rgba(102,126,234,.4); transition: all .2s;
+        }
+        .btn-next-page:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(102,126,234,.5); }
+
+        /* ── Toast 通知 ── */
+        .toast-wrap {
+            position: fixed; top: 20px; right: 20px; z-index: 9999;
+            display: flex; flex-direction: column; gap: 8px;
+        }
+        .toast {
+            background: #333; color: #fff; padding: 12px 20px; border-radius: 8px;
+            font-size: 14px; opacity: 0; transform: translateX(60px);
+            transition: opacity .3s, transform .3s; max-width: 360px;
+        }
+        .toast.show { opacity: 1; transform: translateX(0); }
+        .toast.success { background: #52c41a; }
+        .toast.error { background: #ff4d4f; }
+
+        /* ═══════════════ 第二页: AI 生成 ═══════════════ */
+        .api-config {
+            background: #fff; padding: 16px 20px; border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.06); margin-bottom: 16px;
+        }
+        .api-config h3 { font-size: 15px; margin-bottom: 10px; color: #555; }
+        .api-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .api-row input {
+            flex: 1; min-width: 200px; padding: 10px 14px; border: 2px solid #e0e0e0;
+            border-radius: 8px; font-size: 14px; outline: none; transition: border-color .2s;
+        }
+        .api-row input:focus { border-color: #667eea; }
+        .api-row .btn-save-key {
+            padding: 10px 20px; background: #52c41a; color: #fff; border: none;
+            border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+        }
+        .api-row .btn-save-key:hover { background: #46a817; }
+        .api-saved-hint { font-size: 12px; color: #52c41a; margin-top: 6px; display: none; }
+
+        .gen-toolbar {
+            background: #fff; padding: 14px 20px; border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.06); margin-bottom: 16px;
+            display: flex; align-items: center; justify-content: space-between;
+            flex-wrap: wrap; gap: 10px;
+        }
+        .gen-toolbar .gen-info { font-size: 14px; color: #666; }
+        .gen-toolbar .gen-info strong { color: #333; font-size: 16px; }
+        .gen-toolbar .gen-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .gen-toolbar button {
+            padding: 10px 20px; border: none; border-radius: 8px;
+            font-size: 14px; font-weight: 600; cursor: pointer; transition: background .2s;
+        }
+        .btn-gen-all { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; }
+        .btn-gen-all:hover { opacity: .9; }
+        .btn-gen-all:disabled { background: #aaa; cursor: not-allowed; }
+        .btn-dl-results { background: #52c41a; color: #fff; }
+        .btn-dl-results:hover { background: #46a817; }
+        .btn-back-p1 { background: #f0f0f0; color: #666; }
+        .btn-back-p1:hover { background: #e0e0e0; }
+
+        /* ── 生成卡片 ── */
+        .gen-gallery {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 20px; margin-top: 16px;
+        }
+        .gen-card {
+            background: #fff; border-radius: 12px; overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,.06); transition: box-shadow .2s;
+        }
+        .gen-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.12); }
+        .gen-card .gen-pair {
+            display: flex; gap: 0;
+        }
+        .gen-card .gen-side {
+            flex: 1; position: relative; min-height: 200px;
+            display: flex; align-items: center; justify-content: center;
+            background: #fafafa; overflow: hidden;
+        }
+        .gen-card .gen-side img { max-width: 100%; max-height: 260px; object-fit: contain; }
+        .gen-card .gen-side .gen-label {
+            position: absolute; top: 8px; left: 8px;
+            background: rgba(0,0,0,.55); color: #fff; padding: 2px 8px;
+            border-radius: 4px; font-size: 11px; font-weight: 600;
+        }
+        .gen-card .gen-side.result-side { background: #f8f8f8; }
+        .gen-card .gen-side .gen-placeholder {
+            color: #ccc; font-size: 13px; text-align: center; padding: 20px;
+        }
+        .gen-card .gen-side .gen-status {
+            text-align: center; padding: 20px;
+        }
+        .gen-card .gen-side .gen-status .spinner {
+            width: 24px; height: 24px; border-width: 2px;
+        }
+        .gen-card .gen-side .gen-status .status-text {
+            display: block; margin-top: 8px; font-size: 12px; color: #888;
+        }
+        .gen-card .gen-side .gen-status .error-text {
+            color: #ff4d4f; font-size: 12px;
+        }
+        .gen-card .gen-card-footer {
+            padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;
+            border-top: 1px solid #f0f0f0;
+        }
+        .gen-card .gen-card-footer .gen-name {
+            font-size: 12px; color: #888; white-space: nowrap;
+            overflow: hidden; text-overflow: ellipsis; max-width: 60%;
+        }
+        .gen-card .gen-card-footer button {
+            padding: 4px 12px; border: none; border-radius: 4px; font-size: 12px;
+            cursor: pointer; transition: background .2s;
+        }
+        .btn-retry { background: #fff7e6; color: #fa8c16; }
+        .btn-retry:hover { background: #ffe7ba; }
+
+        .gen-card.selected { outline: 3px solid #667eea; outline-offset: -3px; }
+        .gen-card .gen-card-footer .gen-checkbox-label {
+            display: flex; align-items: center; gap: 4px;
+            font-size: 12px; color: #888; cursor: pointer;
+        }
+        .gen-card .gen-card-footer .gen-checkbox-label input[type="checkbox"] {
+            width: 16px; height: 16px; accent-color: #667eea; cursor: pointer;
+        }
+
+        /* ── 进度条 ── */
+        .gen-progress {
+            background: #fff; padding: 14px 20px; border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.06); margin-bottom: 16px; display: none;
+        }
+        .gen-progress.visible { display: block; }
+        .gen-progress .progress-bar-wrap {
+            background: #f0f0f0; border-radius: 6px; height: 12px; overflow: hidden;
+        }
+        .gen-progress .progress-bar {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            height: 100%; border-radius: 6px; transition: width .3s; width: 0%;
+        }
+        .gen-progress .progress-text {
+            font-size: 13px; color: #888; margin-top: 6px; text-align: center;
+        }
+
+        /* ── 响应式 ── */
+        @media (max-width: 640px) {
+            .gallery { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+            .card .img-wrap { height: 150px; }
+            .search-bar { flex-direction: column; }
+            .search-bar button { width: 100%; }
+            .gen-gallery { grid-template-columns: 1fr; }
+            .gen-card .gen-pair { flex-direction: column; }
+            .step-nav .step { padding: 8px 12px; font-size: 11px; }
+            .rename-results { grid-template-columns: 1fr; }
+        }
+
+        /* ═════════════ 第三页: 重命名 ═════════════ */
+        .rename-config {
+            background: #fff; padding: 16px 20px; border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.06); margin-bottom: 16px;
+        }
+        .rename-config h3 { font-size: 15px; margin-bottom: 6px; color: #555; }
+        .rename-results {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px; margin-top: 16px;
+        }
+        .rename-card {
+            background: #fff; border-radius: 12px; overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,.06); display: flex; flex-direction: column;
+        }
+        .rename-card .rename-img-wrap {
+            height: 200px; display: flex; align-items: center; justify-content: center;
+            background: #fafafa; overflow: hidden;
+        }
+        .rename-card .rename-img-wrap img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .rename-card .rename-card-body {
+            padding: 12px 14px; border-top: 1px solid #f0f0f0;
+        }
+        .rename-card .rename-old-name {
+            font-size: 11px; color: #bbb; margin-bottom: 6px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .rename-card .rename-new-name {
+            width: 100%; padding: 8px 10px; border: 2px solid #e0e0e0; border-radius: 6px;
+            font-size: 13px; outline: none; transition: border-color .2s;
+        }
+        .rename-card .rename-new-name:focus { border-color: #667eea; }
+        .rename-card.selected { outline: 3px solid #667eea; outline-offset: -3px; }
+        .rename-card .rename-checkbox {
+            position: absolute; top: 8px; right: 8px; width: 18px; height: 18px;
+            accent-color: #667eea; cursor: pointer; z-index: 2;
+        }
+        .rename-card .rename-img-wrap { position: relative; }
+        .rename-toolbar {
+            display: flex; align-items: center; justify-content: space-between;
+            flex-wrap: wrap; gap: 8px; margin-bottom: 12px;
+            padding: 10px 16px; background: #fff; border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.06);
+        }
+        .rename-toolbar .rename-info { font-size: 13px; color: #666; }
+        .rename-toolbar .rename-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+        .rename-toolbar .rename-actions button {
+            padding: 6px 14px; border: none; border-radius: 6px; font-size: 12px;
+            cursor: pointer; transition: background .2s;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>填色页生成工具</h1>
+    <p>抓取图片 / 上传图片 → AI 生成黑白填色页 → AI 智能重命名</p>
+    <div class="step-nav">
+        <button class="step active" data-page="1">第一步：抓取图片</button>
+        <button class="step disabled" data-page="2">第二步：生成填色页</button>
+        <button class="step disabled" data-page="3">第三步：智能重命名</button>
+    </div>
+</div>
+
+<!-- ═══════════════ 第一页: 抓取图片 ═══════════════ -->
+<div class="page active" id="page1">
+<div class="container">
+    <div class="search-bar">
+        <input id="urlInput" type="text" placeholder="请输入网站网址，例如 https://example.com" />
+        <button id="scrapeBtn">开始抓取</button>
+        <button id="directImportBtn" style="background:#1890ff">上传图片</button>
+    </div>
+    <input type="file" id="directFileInput" multiple accept="image/*" style="display:none" />
+
+    <div class="toolbar" id="toolbar">
+        <div class="info">
+            共找到 <strong id="totalCount">0</strong> 张图片，已展示 <strong id="showCount">0</strong> 张
+            <span id="selectedInfo"></span>
+        </div>
+        <div class="actions">
+            <button class="btn-select-all" id="selectAllBtn">全选当前</button>
+            <button class="btn-deselect" id="deselectBtn">取消全选</button>
+            <button class="btn-confirm-sel" id="confirmSelBtn">确认选择</button>
+            <button class="btn-download-sel" id="downloadSelBtn">下载选中</button>
+            <button class="btn-delete-sel" id="deleteSelBtn">删除选中</button>
+        </div>
+    </div>
+
+    <div class="confirmed-bar" id="confirmedBar">
+        <div class="confirmed-info">✅ 已确认 <strong id="confirmedCount">0</strong> 张图片，可进入下一步操作</div>
+        <div class="confirmed-actions">
+            <button class="btn-import" id="importBtn">导入图片</button>
+            <button class="btn-undo-confirm" id="undoConfirmBtn">撤销确认，重新选择</button>
+        </div>
+    </div>
+
+    <div class="status-msg" id="statusMsg">
+        <span class="spinner"></span> 正在抓取图片，请稍候...
+    </div>
+
+    <div class="gallery" id="gallery"></div>
+
+    <div class="load-more-bar" id="loadMoreBar">
+        <button class="btn-load-more" id="loadMoreBtn">加载更多</button>
+        <button class="btn-stop" id="stopBtn">暂停加载</button>
+    </div>
+
+    <div class="next-page-bar" id="nextPageBar">
+        <button class="btn-next-page" id="nextPageBtn">下一步：生成填色页 →</button>
+    </div>
+</div>
+</div>
+
+<!-- ═══════════════ 第二页: AI 生成填色页 ═══════════════ -->
+<div class="page" id="page2">
+<div class="container">
+    <div class="api-config">
+        <h3>API 配置</h3>
+        <div class="api-row">
+            <input id="apiKeyInput" type="password" placeholder="输入你的 API Key (apimart.ai)" />
+            <button class="btn-save-key" id="saveKeyBtn">保存</button>
+        </div>
+        <div class="api-saved-hint" id="apiSavedHint">✅ API Key 已保存</div>
+    </div>
+
+    <div class="gen-toolbar">
+        <div class="gen-info">
+            共 <strong id="genTotalCount">0</strong> 张原图
+            <span id="genDoneInfo"></span>
+            <span id="genSelectedInfo"></span>
+        </div>
+        <div class="gen-actions">
+            <button class="btn-back-p1" id="backToP1Btn">← 返回上一步</button>
+            <button class="btn-select-all" id="genSelectAllBtn">全选</button>
+            <button class="btn-deselect" id="genDeselectBtn">取消全选</button>
+            <button class="btn-gen-all" id="genAllBtn">开始生成全部</button>
+            <button class="btn-gen-all" id="genSelectedBtn" style="background:linear-gradient(135deg,#fa8c16,#f5222d)">生成选中</button>
+            <button class="btn-delete-sel" id="genDeleteSelBtn">删除选中</button>
+            <button class="btn-dl-results" id="dlResultsBtn">下载全部结果</button>
+            <button class="btn-dl-results" id="dlSelectedResultsBtn" style="background:#1890ff">下载选中结果</button>
+        </div>
+    </div>
+
+    <div class="gen-progress" id="genProgress">
+        <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div>
+        <div class="progress-text" id="progressText">准备中...</div>
+    </div>
+
+    <div class="gen-gallery" id="genGallery"></div>
+
+    <div class="next-page-bar" id="nextPageBar2">
+        <button class="btn-next-page" id="nextPageBtn2">下一步：智能重命名 →</button>
+    </div>
+</div>
+</div>
+
+<!-- ═══════════════ 第三页: AI 智能重命名 ═══════════════ -->
+<div class="page" id="page3">
+<div class="container">
+    <div class="rename-config">
+        <h3>主题词设置</h3>
+        <p style="font-size:13px;color:#888;margin-bottom:10px">输入主题词，AI 将根据每张填色页的画面内容和主题词自动生成规范的文件名</p>
+        <div class="api-row">
+            <input id="themeInput" type="text" placeholder="输入主题词，例如 Cozy Friends" style="flex:2" />
+            <button class="btn-gen-all" id="startRenameBtn">开始 AI 重命名</button>
+            <button class="btn-back-p1" id="backToP2Btn">← 返回上一步</button>
+        </div>
+    </div>
+
+    <div class="gen-progress" id="renameProgress">
+        <div class="progress-bar-wrap"><div class="progress-bar" id="renameProgressBar"></div></div>
+        <div class="progress-text" id="renameProgressText">准备中...</div>
+    </div>
+
+    <div class="rename-toolbar" id="renameToolbar" style="display:none">
+        <div class="rename-info">共 <strong id="renameTotalCount">0</strong> 张图片<span id="renameSelectedInfo"></span></div>
+        <div class="rename-actions">
+            <button class="btn-select-all" id="renameSelectAllBtn">全选</button>
+            <button class="btn-deselect" id="renameDeselectBtn">取消全选</button>
+            <button class="btn-delete-sel" id="renameDeleteSelBtn">删除选中</button>
+        </div>
+    </div>
+    <div class="rename-results" id="renameResults"></div>
+
+    <div style="text-align:center;margin-top:24px;padding-bottom:40px" id="renameDownloadBar">
+        <button class="btn-next-page" id="downloadRenamedBtn" style="display:none">下载打包 ZIP</button>
+    </div>
+</div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+<input type="file" id="fileInput" multiple accept="image/*" style="display:none" />
+
+<script>
+(() => {
+    /* ═══════════════ 公共工具 ═══════════════ */
+    // ▼▼▼ 部署配置：修改此处指向您的后端地址 ▼▼▼
+    // 本地开发: 自动使用 localhost:5002
+    // 线上部署: 改为后端实际地址，如 'https://your-backend.onrender.com'
+    const BACKEND = window.__BACKEND_URL__
+        || (location.hostname === 'localhost' || location.hostname === '127.0.0.1'
+            ? location.protocol + '//' + location.hostname + ':5002'
+            : '');  // ← 线上部署时在此填入后端地址
+    const BATCH_SIZE = 50;
+
+    function toast(msg, type = '') {
+        const wrap = document.getElementById('toastWrap');
+        const el = document.createElement('div');
+        el.className = 'toast' + (type ? ' ' + type : '');
+        el.textContent = msg;
+        wrap.appendChild(el);
+        requestAnimationFrame(() => el.classList.add('show'));
+        setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 3000);
+    }
+
+    /* ═══════════════ IndexedDB 持久化 ═══════════════ */
+    const DB_NAME = 'ColoringToolDB';
+    const DB_VER = 1;
+    let db = null;
+
+    function openDB() {
+        return new Promise((resolve, reject) => {
+            const req = indexedDB.open(DB_NAME, DB_VER);
+            req.onupgradeneeded = e => {
+                const d = e.target.result;
+                if (!d.objectStoreNames.contains('state')) d.createObjectStore('state');
+                if (!d.objectStoreNames.contains('blobs')) d.createObjectStore('blobs');
+            };
+            req.onsuccess = e => { db = e.target.result; resolve(db); };
+            req.onerror = e => reject(e);
+        });
+    }
+
+    function dbPut(store, key, val) {
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(store, 'readwrite');
+            tx.objectStore(store).put(val, key);
+            tx.oncomplete = () => resolve();
+            tx.onerror = e => reject(e);
+        });
+    }
+
+    function dbGet(store, key) {
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(store, 'readonly');
+            const req = tx.objectStore(store).get(key);
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = e => reject(e);
+        });
+    }
+
+    function dbDelete(store, key) {
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(store, 'readwrite');
+            tx.objectStore(store).delete(key);
+            tx.oncomplete = () => resolve();
+            tx.onerror = e => reject(e);
+        });
+    }
+
+    // 将图片 URL 转为 base64 data URI 以便持久化
+    async function imgToBase64(src) {
+        if (src.startsWith('data:')) return src;
+        if (src.startsWith('blob:')) {
+            const resp = await fetch(src);
+            const blob = await resp.blob();
+            return new Promise(resolve => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(blob);
+            });
+        }
+        // 远程 URL - 通过代理获取
+        const resp = await fetch(BACKEND + '/proxy?url=' + encodeURIComponent(src));
+        const blob = await resp.blob();
+        return new Promise(resolve => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(blob);
+        });
+    }
+
+    async function saveAppState() {
+        if (!db) return;
+        // 保存第一页的确认图片（含base64）
+        const imgs = [];
+        for (const img of p1ConfirmedImages) {
+            let b64 = img._b64 || null;
+            if (!b64) {
+                try { b64 = await imgToBase64(img.src); } catch { b64 = img.src; }
+            }
+            imgs.push({ src: img.src, alt: img.alt, _b64: b64 });
+        }
+        await dbPut('state', 'confirmedImages', imgs);
+        await dbPut('state', 'currentPage', currentPage);
+        await dbPut('state', 'isConfirmed', isConfirmed);
+        // 保存第二页生成结果
+        if (genItems.length > 0) {
+            const genData = genItems.map(g => ({
+                src: g.src, alt: g.alt, _b64: g._b64 || null,
+                resultUrl: g.resultUrl || null, resultB64: g.resultB64 || null,
+                status: g.status, error: g.error || null, taskId: g.taskId || null
+            }));
+            await dbPut('state', 'genItems', genData);
+        }
+    }
+
+    async function loadAppState() {
+        if (!db) return;
+        const saved = await dbGet('state', 'confirmedImages');
+        const page = await dbGet('state', 'currentPage');
+        const confirmed = await dbGet('state', 'isConfirmed');
+        const savedGen = await dbGet('state', 'genItems');
+        if (saved && saved.length > 0) {
+            p1ConfirmedImages = saved;
+            isConfirmed = confirmed || false;
+        }
+        if (savedGen && savedGen.length > 0) {
+            genItems = savedGen;
+        }
+        if (page) currentPage = page;
+    }
+
+    /* ═══════════════ 页面导航 ═══════════════ */
+    let currentPage = 1;
+    let isConfirmed = false;
+    let p1ConfirmedImages = [];  // { src, alt, _b64? }
+
+    const stepBtns = document.querySelectorAll('.step-nav .step');
+    const page1 = document.getElementById('page1');
+    const page2 = document.getElementById('page2');
+    const page3 = document.getElementById('page3');
+    let hasGenDone = false;
+
+    function showPage(n) {
+        currentPage = n;
+        page1.classList.toggle('active', n === 1);
+        page2.classList.toggle('active', n === 2);
+        page3.classList.toggle('active', n === 3);
+        hasGenDone = genItems.some(g => g.status === 'done');
+        stepBtns.forEach(b => {
+            const p = +b.dataset.page;
+            b.classList.toggle('active', p === n);
+            if (p === 2) b.classList.toggle('disabled', !isConfirmed);
+            if (p === 3) b.classList.toggle('disabled', !hasGenDone);
+        });
+        if (n === 2) { initPage2(); updateNextPageBar2(); }
+        if (n === 3) initPage3();
+        saveAppState();
+    }
+
+    function updateNextPageBar2() {
+        const bar = document.getElementById('nextPageBar2');
+        hasGenDone = genItems.some(g => g.status === 'done');
+        bar.classList.toggle('visible', hasGenDone);
+    }
+
+    stepBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const p = +btn.dataset.page;
+            if (p === 2 && !isConfirmed) return;
+            if (p === 3 && !hasGenDone) return;
+            showPage(p);
+        });
+    });
+
+    /* ═══════════════ 第一页: 抓取逻辑 ═══════════════ */
+    let allImages = [];
+    let displayedImages = [];
+    let currentIndex = 0;
+    let preConfirmSnapshot = null;
+
+    const urlInput = document.getElementById('urlInput');
+    const scrapeBtn = document.getElementById('scrapeBtn');
+    const toolbar = document.getElementById('toolbar');
+    const totalCount = document.getElementById('totalCount');
+    const showCount = document.getElementById('showCount');
+    const selectedInfo = document.getElementById('selectedInfo');
+    const statusMsg = document.getElementById('statusMsg');
+    const gallery = document.getElementById('gallery');
+    const loadMoreBar = document.getElementById('loadMoreBar');
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const selectAllBtn = document.getElementById('selectAllBtn');
+    const deselectBtn = document.getElementById('deselectBtn');
+    const downloadSelBtn = document.getElementById('downloadSelBtn');
+    const deleteSelBtn = document.getElementById('deleteSelBtn');
+    const confirmSelBtn = document.getElementById('confirmSelBtn');
+    const confirmedBar = document.getElementById('confirmedBar');
+    const confirmedCount = document.getElementById('confirmedCount');
+    const undoConfirmBtn = document.getElementById('undoConfirmBtn');
+    const importBtn = document.getElementById('importBtn');
+    const fileInput = document.getElementById('fileInput');
+    const nextPageBar = document.getElementById('nextPageBar');
+    const nextPageBtn = document.getElementById('nextPageBtn');
+
+    function updateSelectedInfo() {
+        const checked = gallery.querySelectorAll('.card-checkbox:checked');
+        selectedInfo.textContent = checked.length > 0 ? `，已选中 ${checked.length} 张` : '';
+    }
+
+    function createCard(img) {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.dataset.src = img.src;
+        card.dataset.alt = img.alt;
+
+        const imgWrap = document.createElement('div');
+        imgWrap.className = 'img-wrap';
+        const placeholder = document.createElement('span');
+        placeholder.className = 'loading-placeholder';
+        placeholder.textContent = '加载中...';
+        imgWrap.appendChild(placeholder);
+
+        const imgEl = document.createElement('img');
+        // 根据图片来源使用不同加载方式
+        if (img._b64) {
+            imgEl.src = img._b64;
+        } else if (img.src.startsWith('blob:') || img.src.startsWith('data:')) {
+            imgEl.src = img.src;
+        } else {
+            imgEl.src = BACKEND + '/proxy?url=' + encodeURIComponent(img.src);
+        }
+        imgEl.alt = img.alt;
+        imgEl.loading = 'lazy';
+        imgEl.onload = () => placeholder.remove();
+        imgEl.onerror = () => { placeholder.textContent = '加载失败'; };
+        imgWrap.appendChild(imgEl);
+
+        const body = document.createElement('div');
+        body.className = 'card-body';
+        const altName = document.createElement('div');
+        altName.className = 'alt-name';
+        altName.title = img.alt;
+        altName.textContent = img.alt || '(无名称)';
+        const actions = document.createElement('div');
+        actions.className = 'card-actions';
+
+        const label = document.createElement('label');
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'card-checkbox';
+        checkbox.addEventListener('change', () => {
+            card.classList.toggle('selected', checkbox.checked);
+            updateSelectedInfo();
+        });
+        label.appendChild(checkbox);
+        label.appendChild(document.createTextNode('选择'));
+
+        const dlBtn = document.createElement('button');
+        dlBtn.className = 'btn-dl';
+        dlBtn.textContent = '下载';
+        dlBtn.addEventListener('click', () => downloadSingle(img));
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'btn-del';
+        delBtn.textContent = '删除';
+        delBtn.addEventListener('click', () => {
+            card.remove();
+            displayedImages = displayedImages.filter(d => d.src !== img.src);
+            allImages = allImages.filter(d => d.src !== img.src);
+            showCount.textContent = gallery.querySelectorAll('.card').length;
+            totalCount.textContent = allImages.length;
+            if (isConfirmed) {
+                p1ConfirmedImages = p1ConfirmedImages.filter(d => d.src !== img.src);
+                confirmedCount.textContent = p1ConfirmedImages.length;
+                saveAppState();
+            }
+            updateSelectedInfo();
+            toast('已删除 1 张图片');
+        });
+
+        actions.appendChild(label);
+        actions.appendChild(dlBtn);
+        actions.appendChild(delBtn);
+        body.appendChild(altName);
+        body.appendChild(actions);
+        card.appendChild(imgWrap);
+        card.appendChild(body);
+        return card;
+    }
+
+    function renderBatch() {
+        const end = Math.min(currentIndex + BATCH_SIZE, allImages.length);
+        for (let i = currentIndex; i < end; i++) {
+            gallery.appendChild(createCard(allImages[i]));
+            displayedImages.push(allImages[i]);
+        }
+        currentIndex = end;
+        showCount.textContent = gallery.querySelectorAll('.card').length;
+        loadMoreBar.classList.toggle('visible', currentIndex < allImages.length);
+    }
+
+    async function doScrape() {
+        const url = urlInput.value.trim();
+        if (!url) { toast('请输入网址', 'error'); return; }
+        scrapeBtn.disabled = true;
+        scrapeBtn.textContent = '抓取中...';
+        gallery.innerHTML = '';
+        displayedImages = []; allImages = []; currentIndex = 0;
+        toolbar.classList.remove('visible');
+        loadMoreBar.classList.remove('visible');
+        confirmedBar.classList.remove('visible');
+        nextPageBar.classList.remove('visible');
+        isConfirmed = false;
+        statusMsg.classList.add('visible');
+        try {
+            const resp = await fetch(BACKEND + '/scrape', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url })
+            });
+            if (!resp.ok) { const e = await resp.json().catch(() => ({})); throw new Error(e.error || '请求失败'); }
+            allImages = await resp.json();
+            totalCount.textContent = allImages.length;
+            if (allImages.length === 0) { toast('该页面未找到可用图片', 'error'); }
+            else { toolbar.classList.add('visible'); renderBatch(); toast(`成功抓取 ${allImages.length} 张图片`, 'success'); }
+        } catch (e) { toast('抓取失败: ' + e.message, 'error'); }
+        finally { scrapeBtn.disabled = false; scrapeBtn.textContent = '开始抓取'; statusMsg.classList.remove('visible'); }
+    }
+
+    async function downloadSingle(img) {
+        toast('正在下载...');
+        try {
+            // 如果是 base64/blob，直接下载
+            if (img._b64 || img.src.startsWith('data:') || img.src.startsWith('blob:')) {
+                const a = document.createElement('a');
+                a.href = img._b64 || img.src;
+                a.download = (img.alt || 'image').replace(/_/g, ' ') + '.png';
+                document.body.appendChild(a); a.click(); a.remove();
+                toast('下载完成', 'success'); return;
+            }
+            const resp = await fetch(BACKEND + '/download-image', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: img.src, alt: img.alt })
+            });
+            if (!resp.ok) throw new Error('下载失败');
+            const blob = await resp.blob();
+            const cd = resp.headers.get('Content-Disposition') || '';
+            let filename = (img.alt || 'image').replace(/_/g, ' ') + '.png';
+            const m = cd.match(/filename\*?=(?:UTF-8'')?([^;\n]+)/i);
+            if (m) filename = decodeURIComponent(m[1].replace(/['"]/g, ''));
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = filename;
+            document.body.appendChild(a); a.click(); a.remove();
+            URL.revokeObjectURL(a.href);
+            toast('下载完成', 'success');
+        } catch (e) { toast('下载失败: ' + e.message, 'error'); }
+    }
+
+    async function downloadSelected() {
+        const cards = gallery.querySelectorAll('.card');
+        const selected = [];
+        cards.forEach(card => {
+            const cb = card.querySelector('.card-checkbox');
+            if (cb && cb.checked) selected.push({ src: card.dataset.src, alt: card.dataset.alt });
+        });
+        if (selected.length === 0) { toast('请先选择图片', 'error'); return; }
+        toast(`正在打包 ${selected.length} 张图片...`);
+        downloadSelBtn.disabled = true; downloadSelBtn.textContent = '打包中...';
+        try {
+            const resp = await fetch(BACKEND + '/download-selected', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ images: selected })
+            });
+            if (!resp.ok) throw new Error('打包失败');
+            const blob = await resp.blob();
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+            a.download = 'images.zip'; document.body.appendChild(a); a.click(); a.remove();
+            URL.revokeObjectURL(a.href);
+            toast(`${selected.length} 张图片已打包下载`, 'success');
+        } catch (e) { toast('打包失败: ' + e.message, 'error'); }
+        finally { downloadSelBtn.disabled = false; downloadSelBtn.textContent = '下载选中'; }
+    }
+
+    function deleteSelected() {
+        const cards = gallery.querySelectorAll('.card');
+        let count = 0;
+        cards.forEach(card => {
+            const cb = card.querySelector('.card-checkbox');
+            if (cb && cb.checked) {
+                displayedImages = displayedImages.filter(d => d.src !== card.dataset.src);
+                card.remove(); count++;
+            }
+        });
+        if (count === 0) { toast('请先选择图片', 'error'); return; }
+        showCount.textContent = gallery.querySelectorAll('.card').length;
+        updateSelectedInfo();
+        toast(`已删除 ${count} 张图片`, 'success');
+    }
+
+    async function confirmSelection() {
+        const cards = gallery.querySelectorAll('.card');
+        const selectedCards = [], unselectedCards = [];
+        cards.forEach(card => {
+            const cb = card.querySelector('.card-checkbox');
+            (cb && cb.checked ? selectedCards : unselectedCards).push(card);
+        });
+        if (selectedCards.length === 0) { toast('请先选择要保留的图片', 'error'); return; }
+        preConfirmSnapshot = { allImages: [...allImages], displayedImages: [...displayedImages], currentIndex, galleryHTML: gallery.innerHTML };
+        unselectedCards.forEach(card => card.remove());
+        const keptSrcs = new Set(selectedCards.map(c => c.dataset.src));
+        displayedImages = displayedImages.filter(d => keptSrcs.has(d.src));
+        allImages = displayedImages.slice();
+        currentIndex = allImages.length;
+        selectedCards.forEach(card => {
+            const cb = card.querySelector('.card-checkbox');
+            if (cb) { cb.checked = false; card.classList.remove('selected'); }
+        });
+        // 标记为已确认
+        isConfirmed = true;
+        p1ConfirmedImages = allImages.slice();
+        // 更新 UI
+        totalCount.textContent = allImages.length;
+        showCount.textContent = allImages.length;
+        updateSelectedInfo();
+        loadMoreBar.classList.remove('visible');
+        confirmedBar.classList.add('visible');
+        confirmedCount.textContent = allImages.length;
+        nextPageBar.classList.add('visible');
+        // 更新步骤导航
+        stepBtns.forEach(b => { if (+b.dataset.page === 2) b.classList.remove('disabled'); });
+        toast(`已确认保留 ${allImages.length} 张图片`, 'success');
+        // 保存到 IndexedDB
+        saveAppState();
+    }
+
+    function undoConfirm() {
+        if (!preConfirmSnapshot) { toast('没有可撤销的操作', 'error'); return; }
+        allImages = preConfirmSnapshot.allImages;
+        displayedImages = preConfirmSnapshot.displayedImages;
+        currentIndex = preConfirmSnapshot.currentIndex;
+        gallery.innerHTML = preConfirmSnapshot.galleryHTML;
+        rebindCardEvents();
+        isConfirmed = false;
+        p1ConfirmedImages = [];
+        totalCount.textContent = allImages.length;
+        showCount.textContent = gallery.querySelectorAll('.card').length;
+        updateSelectedInfo();
+        loadMoreBar.classList.toggle('visible', currentIndex < allImages.length);
+        confirmedBar.classList.remove('visible');
+        nextPageBar.classList.remove('visible');
+        stepBtns.forEach(b => { if (+b.dataset.page === 2) b.classList.add('disabled'); });
+        preConfirmSnapshot = null;
+        saveAppState();
+        toast('已撤销确认，恢复到之前的状态', 'success');
+    }
+
+    function rebindCardEvents() {
+        gallery.querySelectorAll('.card').forEach(card => {
+            const cb = card.querySelector('.card-checkbox');
+            if (cb) cb.addEventListener('change', () => { card.classList.toggle('selected', cb.checked); updateSelectedInfo(); });
+            const dlBtn = card.querySelector('.btn-dl');
+            if (dlBtn) dlBtn.addEventListener('click', () => downloadSingle({ src: card.dataset.src, alt: card.dataset.alt }));
+            const delBtn = card.querySelector('.btn-del');
+            if (delBtn) delBtn.addEventListener('click', () => {
+                card.remove();
+                displayedImages = displayedImages.filter(d => d.src !== card.dataset.src);
+                showCount.textContent = gallery.querySelectorAll('.card').length;
+                updateSelectedInfo(); toast('已删除 1 张图片');
+            });
+        });
+    }
+
+    async function importImages(files) {
+        if (!files || files.length === 0) return;
+        let count = 0;
+        for (const file of files) {
+            if (!file.type.startsWith('image/')) continue;
+            // 直接转为 base64 data URI，避免 blob: URL 无法传给后端
+            const b64 = await new Promise(resolve => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(file);
+            });
+            const alt = file.name.replace(/\.[^.]+$/, '').replace(/_/g, ' ');
+            const img = { src: b64, alt, _b64: b64, _local: true };
+            const card = createCard(img);
+            gallery.appendChild(card);
+            displayedImages.push(img);
+            allImages.push(img);
+            p1ConfirmedImages.push(img);
+            count++;
+        }
+        // 上传图片后自动进入确认状态，可直接进入下一步
+        if (!isConfirmed && p1ConfirmedImages.length > 0) {
+            isConfirmed = true;
+            stepBtns.forEach(b => { if (+b.dataset.page === 2) b.classList.remove('disabled'); });
+        }
+        totalCount.textContent = allImages.length;
+        showCount.textContent = gallery.querySelectorAll('.card').length;
+        confirmedCount.textContent = p1ConfirmedImages.length;
+        confirmedBar.classList.add('visible');
+        nextPageBar.classList.add('visible');
+        saveAppState();
+        toast(`已导入 ${count} 张图片`, 'success');
+    }
+
+    // 第一页事件绑定
+    scrapeBtn.addEventListener('click', doScrape);
+    urlInput.addEventListener('keydown', e => { if (e.key === 'Enter') doScrape(); });
+    loadMoreBtn.addEventListener('click', () => { renderBatch(); toast('已加载更多图片', 'success'); });
+    stopBtn.addEventListener('click', () => { loadMoreBar.classList.remove('visible'); toast('已暂停加载'); });
+    selectAllBtn.addEventListener('click', () => {
+        gallery.querySelectorAll('.card').forEach(card => {
+            const cb = card.querySelector('.card-checkbox');
+            if (cb) { cb.checked = true; card.classList.add('selected'); }
+        }); updateSelectedInfo();
+    });
+    deselectBtn.addEventListener('click', () => {
+        gallery.querySelectorAll('.card').forEach(card => {
+            const cb = card.querySelector('.card-checkbox');
+            if (cb) { cb.checked = false; card.classList.remove('selected'); }
+        }); updateSelectedInfo();
+    });
+    confirmSelBtn.addEventListener('click', confirmSelection);
+    downloadSelBtn.addEventListener('click', downloadSelected);
+    deleteSelBtn.addEventListener('click', deleteSelected);
+    undoConfirmBtn.addEventListener('click', undoConfirm);
+    importBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', () => { const arr = Array.from(fileInput.files); fileInput.value = ''; importImages(arr); });
+
+    // 搜索栏旁的直接上传按钮
+    const directImportBtn = document.getElementById('directImportBtn');
+    const directFileInput = document.getElementById('directFileInput');
+    directImportBtn.addEventListener('click', () => directFileInput.click());
+    directFileInput.addEventListener('change', () => { const arr = Array.from(directFileInput.files); directFileInput.value = ''; importImages(arr); });
+
+    nextPageBtn.addEventListener('click', () => showPage(2));
+
+    /* ═══════════════ 第二页: AI 生成逻辑 ═══════════════ */
+    let genItems = [];  // { src, alt, _b64, status, taskId, resultUrl, resultB64, error }
+    let isGenerating = false;
+    const CONCURRENCY = 3;
+
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    const saveKeyBtn = document.getElementById('saveKeyBtn');
+    const apiSavedHint = document.getElementById('apiSavedHint');
+    const genTotalCount = document.getElementById('genTotalCount');
+    const genDoneInfo = document.getElementById('genDoneInfo');
+    const genSelectedInfo = document.getElementById('genSelectedInfo');
+    const genAllBtn = document.getElementById('genAllBtn');
+    const genSelectedBtn = document.getElementById('genSelectedBtn');
+    const genSelectAllBtn = document.getElementById('genSelectAllBtn');
+    const genDeselectBtn = document.getElementById('genDeselectBtn');
+    const genDeleteSelBtn = document.getElementById('genDeleteSelBtn');
+    const dlResultsBtn = document.getElementById('dlResultsBtn');
+    const dlSelectedResultsBtn = document.getElementById('dlSelectedResultsBtn');
+    const backToP1Btn = document.getElementById('backToP1Btn');
+    const genGallery = document.getElementById('genGallery');
+    const genProgress = document.getElementById('genProgress');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+
+    // API Key 持久化 (localStorage)
+    const savedKey = localStorage.getItem('apimart_api_key');
+    if (savedKey) { apiKeyInput.value = savedKey; apiSavedHint.style.display = 'block'; }
+
+    saveKeyBtn.addEventListener('click', () => {
+        const key = apiKeyInput.value.trim();
+        if (!key) { toast('请输入 API Key', 'error'); return; }
+        localStorage.setItem('apimart_api_key', key);
+        apiSavedHint.style.display = 'block';
+        toast('API Key 已保存', 'success');
+    });
+
+    backToP1Btn.addEventListener('click', () => showPage(1));
+
+    function updateGenSelectedInfo() {
+        const checked = genGallery.querySelectorAll('.gen-card-checkbox:checked');
+        genSelectedInfo.textContent = checked.length > 0 ? `，已选中 ${checked.length} 张` : '';
+    }
+
+    function getSelectedGenIndices() {
+        const indices = [];
+        genGallery.querySelectorAll('.gen-card-checkbox:checked').forEach(cb => {
+            indices.push(+cb.dataset.idx);
+        });
+        return indices;
+    }
+
+    // 全选
+    genSelectAllBtn.addEventListener('click', () => {
+        genGallery.querySelectorAll('.gen-card').forEach(card => {
+            const cb = card.querySelector('.gen-card-checkbox');
+            if (cb) { cb.checked = true; card.classList.add('selected'); }
+        });
+        updateGenSelectedInfo();
+    });
+
+    // 取消全选
+    genDeselectBtn.addEventListener('click', () => {
+        genGallery.querySelectorAll('.gen-card').forEach(card => {
+            const cb = card.querySelector('.gen-card-checkbox');
+            if (cb) { cb.checked = false; card.classList.remove('selected'); }
+        });
+        updateGenSelectedInfo();
+    });
+
+    // 删除选中
+    genDeleteSelBtn.addEventListener('click', () => {
+        const indices = getSelectedGenIndices();
+        if (indices.length === 0) { toast('请先选择要删除的图片', 'error'); return; }
+        // 从高到低删除，避免索引偏移
+        indices.sort((a, b) => b - a).forEach(i => genItems.splice(i, 1));
+        renderGenGallery();
+        updateGenInfo();
+        updateGenSelectedInfo();
+        saveAppState();
+        toast(`已删除 ${indices.length} 张图片`, 'success');
+    });
+
+    // 生成选中
+    genSelectedBtn.addEventListener('click', async () => {
+        const apiKey = getApiKey();
+        if (!apiKey) { toast('请先设置 API Key', 'error'); return; }
+        const indices = getSelectedGenIndices();
+        if (indices.length === 0) { toast('请先选择要生成的图片', 'error'); return; }
+
+        isGenerating = true;
+        genSelectedBtn.disabled = true;
+        genAllBtn.disabled = true;
+        genProgress.classList.add('visible');
+
+        const pending = [];
+        indices.forEach(idx => {
+            const item = genItems[idx];
+            if (item.status !== 'generating' && item.status !== 'polling') {
+                item.status = 'pending'; item.error = null; item.taskId = null;
+                item.resultUrl = null; item.resultB64 = null;
+                refreshGenCard(idx);
+                pending.push(idx);
+            }
+        });
+        updateProgress();
+
+        let cursor = 0;
+        async function runNext() {
+            while (cursor < pending.length) {
+                const idx = pending[cursor++];
+                await generateOne(idx, apiKey);
+                updateProgress();
+            }
+        }
+        const workers = [];
+        for (let i = 0; i < Math.min(CONCURRENCY, pending.length); i++) {
+            workers.push(runNext());
+        }
+        await Promise.all(workers);
+
+        isGenerating = false;
+        genSelectedBtn.disabled = false;
+        genAllBtn.disabled = false;
+        toast('选中项生成完成', 'success');
+        saveAppState();
+    });
+
+    // 下载选中结果
+    dlSelectedResultsBtn.addEventListener('click', () => {
+        const indices = getSelectedGenIndices();
+        const doneItems = indices.map(i => genItems[i]).filter(g => g.status === 'done' && (g.resultB64 || g.resultUrl));
+        if (doneItems.length === 0) { toast('选中项中暂无已完成的结果', 'error'); return; }
+        doneItems.forEach((item, i) => {
+            setTimeout(() => {
+                const a = document.createElement('a');
+                a.href = item.resultB64 || item.resultUrl;
+                a.download = (item.alt || 'coloring_' + i) + '_coloring.png';
+                document.body.appendChild(a); a.click(); a.remove();
+            }, i * 300);
+        });
+        toast(`正在下载 ${doneItems.length} 张填色页`, 'success');
+    });
+
+    function getApiKey() {
+        const k = apiKeyInput.value.trim();
+        if (k) localStorage.setItem('apimart_api_key', k);
+        return k;
+    }
+
+    function initPage2() {
+        // 同步：将 p1ConfirmedImages 中新增的图片追加到 genItems
+        if (p1ConfirmedImages.length > 0) {
+            if (genItems.length === 0) {
+                genItems = p1ConfirmedImages.map(img => ({
+                    src: img.src, alt: img.alt, _b64: img._b64 || null,
+                    status: 'pending', taskId: null, resultUrl: null, resultB64: null, error: null
+                }));
+            } else {
+                // 找出已有的 src 集合
+                const existingSrcs = new Set(genItems.map(g => g.src));
+                for (const img of p1ConfirmedImages) {
+                    if (!existingSrcs.has(img.src)) {
+                        genItems.push({
+                            src: img.src, alt: img.alt, _b64: img._b64 || null,
+                            status: 'pending', taskId: null, resultUrl: null, resultB64: null, error: null
+                        });
+                    }
+                }
+            }
+        }
+        renderGenGallery();
+        updateGenInfo();
+    }
+
+    function updateGenInfo() {
+        genTotalCount.textContent = genItems.length;
+        const done = genItems.filter(g => g.status === 'done').length;
+        const failed = genItems.filter(g => g.status === 'error').length;
+        const parts = [];
+        if (done > 0) parts.push(`已完成 ${done} 张`);
+        if (failed > 0) parts.push(`失败 ${failed} 张`);
+        genDoneInfo.textContent = parts.length > 0 ? '，' + parts.join('，') : '';
+        updateNextPageBar2();
+    }
+
+    function updateProgress() {
+        const total = genItems.length;
+        const done = genItems.filter(g => g.status === 'done' || g.status === 'error').length;
+        const pct = total > 0 ? Math.round(done / total * 100) : 0;
+        progressBar.style.width = pct + '%';
+        progressText.textContent = `${done} / ${total} (${pct}%)`;
+        if (done >= total) {
+            progressText.textContent += ' — 全部完成！';
+            isGenerating = false;
+            genAllBtn.disabled = false;
+            genAllBtn.textContent = '重新生成全部';
+        }
+    }
+
+    function renderGenGallery() {
+        genGallery.innerHTML = '';
+        genItems.forEach((item, idx) => {
+            genGallery.appendChild(createGenCard(item, idx));
+        });
+    }
+
+    function createGenCard(item, idx) {
+        const card = document.createElement('div');
+        card.className = 'gen-card';
+        card.id = 'gen-card-' + idx;
+
+        const pair = document.createElement('div');
+        pair.className = 'gen-pair';
+
+        // 左侧：原图
+        const leftSide = document.createElement('div');
+        leftSide.className = 'gen-side';
+        const leftLabel = document.createElement('div');
+        leftLabel.className = 'gen-label';
+        leftLabel.textContent = '原图';
+        const leftImg = document.createElement('img');
+        if (item._b64) { leftImg.src = item._b64; }
+        else if (item.src.startsWith('blob:') || item.src.startsWith('data:')) { leftImg.src = item.src; }
+        else { leftImg.src = BACKEND + '/proxy?url=' + encodeURIComponent(item.src); }
+        leftSide.appendChild(leftLabel);
+        leftSide.appendChild(leftImg);
+
+        // 右侧：结果
+        const rightSide = document.createElement('div');
+        rightSide.className = 'gen-side result-side';
+        const rightLabel = document.createElement('div');
+        rightLabel.className = 'gen-label';
+        rightLabel.textContent = '填色页';
+
+        if (item.status === 'done' && (item.resultB64 || item.resultUrl)) {
+            const resultImg = document.createElement('img');
+            resultImg.src = item.resultB64 || item.resultUrl;
+            rightSide.appendChild(rightLabel);
+            rightSide.appendChild(resultImg);
+        } else if (item.status === 'generating' || item.status === 'polling') {
+            const statusDiv = document.createElement('div');
+            statusDiv.className = 'gen-status';
+            statusDiv.innerHTML = '<span class="spinner"></span><span class="status-text">' +
+                (item.status === 'generating' ? '提交中...' : '生成中...') + '</span>';
+            rightSide.appendChild(rightLabel);
+            rightSide.appendChild(statusDiv);
+        } else if (item.status === 'error') {
+            const statusDiv = document.createElement('div');
+            statusDiv.className = 'gen-status';
+            statusDiv.innerHTML = '<span class="error-text">❌ ' + (item.error || '生成失败') + '</span>';
+            rightSide.appendChild(rightLabel);
+            rightSide.appendChild(statusDiv);
+        } else {
+            const ph = document.createElement('div');
+            ph.className = 'gen-placeholder';
+            ph.textContent = '等待生成';
+            rightSide.appendChild(rightLabel);
+            rightSide.appendChild(ph);
+        }
+
+        pair.appendChild(leftSide);
+        pair.appendChild(rightSide);
+        card.appendChild(pair);
+
+        // 底部
+        const footer = document.createElement('div');
+        footer.className = 'gen-card-footer';
+
+        const checkLabel = document.createElement('label');
+        checkLabel.className = 'gen-checkbox-label';
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'gen-card-checkbox';
+        checkbox.dataset.idx = idx;
+        checkbox.addEventListener('change', () => {
+            card.classList.toggle('selected', checkbox.checked);
+            updateGenSelectedInfo();
+        });
+        checkLabel.appendChild(checkbox);
+        checkLabel.appendChild(document.createTextNode('选择'));
+        footer.appendChild(checkLabel);
+
+        const name = document.createElement('div');
+        name.className = 'gen-name';
+        name.textContent = item.alt || '(无名称)';
+        footer.appendChild(name);
+
+        const btnWrap = document.createElement('div');
+        btnWrap.style.display = 'flex';
+        btnWrap.style.gap = '6px';
+
+        if (item.status === 'done') {
+            const dlBtn = document.createElement('button');
+            dlBtn.className = 'btn-dl';
+            dlBtn.textContent = '下载';
+            dlBtn.addEventListener('click', () => {
+                const a = document.createElement('a');
+                a.href = item.resultB64 || item.resultUrl;
+                a.download = (item.alt || 'coloring') + '_coloring.png';
+                document.body.appendChild(a); a.click(); a.remove();
+            });
+            btnWrap.appendChild(dlBtn);
+        }
+
+        if (item.status === 'error' || item.status === 'done') {
+            const retryBtn = document.createElement('button');
+            retryBtn.className = 'btn-retry';
+            retryBtn.textContent = '重新生成';
+            retryBtn.addEventListener('click', () => {
+                const key = getApiKey();
+                if (!key) { toast('请先设置 API Key', 'error'); return; }
+                item.status = 'pending'; item.taskId = null; item.resultUrl = null;
+                item.resultB64 = null; item.error = null;
+                refreshGenCard(idx);
+                generateOne(idx, key);
+            });
+            btnWrap.appendChild(retryBtn);
+        }
+
+        footer.appendChild(btnWrap);
+        card.appendChild(footer);
+        return card;
+    }
+
+    function refreshGenCard(idx) {
+        const old = document.getElementById('gen-card-' + idx);
+        if (old) {
+            const newCard = createGenCard(genItems[idx], idx);
+            old.replaceWith(newCard);
+        }
+        updateGenInfo();
+    }
+
+    // 提交生成任务
+    async function generateOne(idx, apiKey) {
+        const item = genItems[idx];
+        item.status = 'generating';
+        refreshGenCard(idx);
+
+        try {
+            // 准备图片源：优先使用 base64，否则使用原始 URL
+            let imageSrc = item._b64 || item.src;
+
+            const resp = await fetch(BACKEND + '/api/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ apiKey, imageSrc })
+            });
+            const data = await resp.json();
+            if (!resp.ok || data.error) {
+                throw new Error(data.error?.message || data.error || '提交失败');
+            }
+            // 获取 task_id
+            const taskId = data.data?.[0]?.task_id;
+            if (!taskId) throw new Error('未获取到任务 ID');
+            item.taskId = taskId;
+            item.status = 'polling';
+            refreshGenCard(idx);
+            saveAppState();
+
+            // 轮询任务状态
+            await pollTask(idx, apiKey);
+        } catch (e) {
+            item.status = 'error';
+            item.error = e.message;
+            refreshGenCard(idx);
+            saveAppState();
+        }
+        updateProgress();
+    }
+
+    async function pollTask(idx, apiKey) {
+        const item = genItems[idx];
+        const maxAttempts = 120;  // 最多等待约 4 分钟
+        for (let i = 0; i < maxAttempts; i++) {
+            await new Promise(r => setTimeout(r, 2000));
+            try {
+                const resp = await fetch(BACKEND + '/api/task/' + item.taskId + '?apiKey=' + encodeURIComponent(apiKey));
+                const data = await resp.json();
+                const taskData = data.data || data;
+                const status = taskData.status;
+
+                if (status === 'completed') {
+                    const imgUrl = taskData.result?.images?.[0]?.url?.[0];
+                    if (!imgUrl) throw new Error('结果中无图片 URL');
+                    item.resultUrl = imgUrl;
+                    // 下载结果图并转为 base64 以便持久化
+                    try {
+                        const imgResp = await fetch(BACKEND + '/proxy?url=' + encodeURIComponent(imgUrl));
+                        const blob = await imgResp.blob();
+                        item.resultB64 = await new Promise(resolve => {
+                            const reader = new FileReader();
+                            reader.onloadend = () => resolve(reader.result);
+                            reader.readAsDataURL(blob);
+                        });
+                    } catch { /* 用 URL 作为 fallback */ }
+                    item.status = 'done';
+                    refreshGenCard(idx);
+                    saveAppState();
+                    return;
+                } else if (status === 'failed') {
+                    throw new Error(taskData.error?.message || '任务失败');
+                }
+                // pending / processing -> continue
+            } catch (e) {
+                item.status = 'error';
+                item.error = e.message;
+                refreshGenCard(idx);
+                saveAppState();
+                return;
+            }
+        }
+        item.status = 'error';
+        item.error = '生成超时';
+        refreshGenCard(idx);
+        saveAppState();
+    }
+
+    // 并发生成全部
+    genAllBtn.addEventListener('click', async () => {
+        const apiKey = getApiKey();
+        if (!apiKey) { toast('请先设置 API Key', 'error'); return; }
+
+        isGenerating = true;
+        genAllBtn.disabled = true;
+        genAllBtn.textContent = '生成中...';
+        genProgress.classList.add('visible');
+
+        // 找出所有 pending 或 error 的
+        const pending = [];
+        genItems.forEach((item, idx) => {
+            if (item.status !== 'done') {
+                item.status = 'pending'; item.error = null; item.taskId = null;
+                item.resultUrl = null; item.resultB64 = null;
+                refreshGenCard(idx);
+                pending.push(idx);
+            }
+        });
+        updateProgress();
+
+        // 并发控制
+        let cursor = 0;
+        async function runNext() {
+            while (cursor < pending.length) {
+                const idx = pending[cursor++];
+                await generateOne(idx, apiKey);
+                updateProgress();
+            }
+        }
+        const workers = [];
+        for (let i = 0; i < Math.min(CONCURRENCY, pending.length); i++) {
+            workers.push(runNext());
+        }
+        await Promise.all(workers);
+
+        isGenerating = false;
+        genAllBtn.disabled = false;
+        genAllBtn.textContent = '重新生成全部';
+        toast('全部生成任务已完成', 'success');
+        updateNextPageBar2();
+        saveAppState();
+    });
+
+    // 下载全部结果
+    dlResultsBtn.addEventListener('click', () => {
+        const doneItems = genItems.filter(g => g.status === 'done' && (g.resultB64 || g.resultUrl));
+        if (doneItems.length === 0) { toast('暂无已完成的结果', 'error'); return; }
+        doneItems.forEach((item, i) => {
+            setTimeout(() => {
+                const a = document.createElement('a');
+                a.href = item.resultB64 || item.resultUrl;
+                a.download = (item.alt || 'coloring_' + i) + '_coloring.png';
+                document.body.appendChild(a); a.click(); a.remove();
+            }, i * 300);
+        });
+        toast(`正在下载 ${doneItems.length} 张填色页`, 'success');
+    });
+
+    // 第二页 → 第三页按钮
+    document.getElementById('nextPageBtn2').addEventListener('click', () => showPage(3));
+
+    /* ═══════════════ 第三页: AI 智能重命名 ═══════════════ */
+    let renameItems = [];  // { imgB64, oldName, newName }
+
+    const themeInput = document.getElementById('themeInput');
+    const startRenameBtn = document.getElementById('startRenameBtn');
+    const backToP2Btn = document.getElementById('backToP2Btn');
+    const renameProgress = document.getElementById('renameProgress');
+    const renameProgressBar = document.getElementById('renameProgressBar');
+    const renameProgressText = document.getElementById('renameProgressText');
+    const renameResults = document.getElementById('renameResults');
+    const downloadRenamedBtn = document.getElementById('downloadRenamedBtn');
+
+    backToP2Btn.addEventListener('click', () => showPage(2));
+
+    const renameToolbar = document.getElementById('renameToolbar');
+    const renameTotalCount = document.getElementById('renameTotalCount');
+    const renameSelectedInfo = document.getElementById('renameSelectedInfo');
+    const renameSelectAllBtn = document.getElementById('renameSelectAllBtn');
+    const renameDeselectBtn = document.getElementById('renameDeselectBtn');
+    const renameDeleteSelBtn = document.getElementById('renameDeleteSelBtn');
+
+    function initPage3() {
+        const doneItems = genItems.filter(g => g.status === 'done' && (g.resultB64 || g.resultUrl));
+        if (renameItems.length === 0 && doneItems.length > 0) {
+            renameItems = doneItems.map((g, i) => ({
+                imgB64: g.resultB64 || g.resultUrl,
+                oldName: g.alt || 'coloring_' + i,
+                newName: ''
+            }));
+        } else if (doneItems.length > renameItems.length) {
+            const existingCount = renameItems.length;
+            for (let i = existingCount; i < doneItems.length; i++) {
+                renameItems.push({
+                    imgB64: doneItems[i].resultB64 || doneItems[i].resultUrl,
+                    oldName: doneItems[i].alt || 'coloring_' + i,
+                    newName: ''
+                });
+            }
+        }
+        renderRenameCards();
+        updateRenameToolbar();
+        downloadRenamedBtn.style.display = renameItems.some(r => r.newName) ? 'inline-block' : 'none';
+    }
+
+    function updateRenameToolbar() {
+        renameToolbar.style.display = renameItems.length > 0 ? 'flex' : 'none';
+        renameTotalCount.textContent = renameItems.length;
+        updateRenameSelectedInfo();
+    }
+
+    function updateRenameSelectedInfo() {
+        const checked = renameResults.querySelectorAll('.rename-checkbox:checked');
+        renameSelectedInfo.textContent = checked.length > 0 ? `，已选中 ${checked.length} 张` : '';
+    }
+
+    function getSelectedRenameIndices() {
+        const indices = [];
+        renameResults.querySelectorAll('.rename-checkbox:checked').forEach(cb => {
+            indices.push(+cb.dataset.idx);
+        });
+        return indices;
+    }
+
+    function renderRenameCards() {
+        renameResults.innerHTML = '';
+        renameItems.forEach((item, idx) => {
+            const card = document.createElement('div');
+            card.className = 'rename-card';
+            const imgWrap = document.createElement('div');
+            imgWrap.className = 'rename-img-wrap';
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'rename-checkbox';
+            checkbox.dataset.idx = idx;
+            checkbox.addEventListener('change', () => {
+                card.classList.toggle('selected', checkbox.checked);
+                updateRenameSelectedInfo();
+            });
+            imgWrap.appendChild(checkbox);
+            const img = document.createElement('img');
+            img.src = item.imgB64;
+            imgWrap.appendChild(img);
+
+            const body = document.createElement('div');
+            body.className = 'rename-card-body';
+            const oldName = document.createElement('div');
+            oldName.className = 'rename-old-name';
+            oldName.textContent = '原名: ' + item.oldName;
+            const input = document.createElement('input');
+            input.className = 'rename-new-name';
+            input.type = 'text';
+            input.value = item.newName;
+            input.placeholder = '等待 AI 命名...';
+            input.addEventListener('input', () => { renameItems[idx].newName = input.value; });
+            body.appendChild(oldName);
+            body.appendChild(input);
+            card.appendChild(imgWrap);
+            card.appendChild(body);
+            renameResults.appendChild(card);
+        });
+    }
+
+    // 重命名页 - 全选
+    renameSelectAllBtn.addEventListener('click', () => {
+        renameResults.querySelectorAll('.rename-card').forEach(card => {
+            const cb = card.querySelector('.rename-checkbox');
+            if (cb) { cb.checked = true; card.classList.add('selected'); }
+        });
+        updateRenameSelectedInfo();
+    });
+
+    // 重命名页 - 取消全选
+    renameDeselectBtn.addEventListener('click', () => {
+        renameResults.querySelectorAll('.rename-card').forEach(card => {
+            const cb = card.querySelector('.rename-checkbox');
+            if (cb) { cb.checked = false; card.classList.remove('selected'); }
+        });
+        updateRenameSelectedInfo();
+    });
+
+    // 重命名页 - 删除选中
+    renameDeleteSelBtn.addEventListener('click', () => {
+        const indices = getSelectedRenameIndices();
+        if (indices.length === 0) { toast('请先选择要删除的图片', 'error'); return; }
+        indices.sort((a, b) => b - a).forEach(i => renameItems.splice(i, 1));
+        renderRenameCards();
+        updateRenameToolbar();
+        downloadRenamedBtn.style.display = renameItems.some(r => r.newName) ? 'inline-block' : 'none';
+        saveAppState();
+        toast(`已删除 ${indices.length} 张图片`, 'success');
+    });
+
+    startRenameBtn.addEventListener('click', async () => {
+        const theme = themeInput.value.trim();
+        if (!theme) { toast('请输入主题词', 'error'); return; }
+        const apiKey = getApiKey();
+        if (!apiKey) { toast('请先在第二步设置 API Key', 'error'); return; }
+        if (renameItems.length === 0) { toast('没有可重命名的图片', 'error'); return; }
+
+        startRenameBtn.disabled = true;
+        startRenameBtn.textContent = 'AI 分析中...';
+        renameProgress.classList.add('visible');
+        renameProgressBar.style.width = '30%';
+        renameProgressText.textContent = '正在发送图片给 AI 分析...';
+
+        try {
+            // 只发送主题词和图片，提示词由后端管理
+            const images = renameItems.map(item => ({ url: item.imgB64 }));
+
+            renameProgressBar.style.width = '50%';
+            renameProgressText.textContent = 'AI 正在分析图片并生成命名...';
+
+            const resp = await fetch(BACKEND + '/api/rename', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ apiKey, theme, images })
+            });
+
+            const result = await resp.json();
+            if (!resp.ok || result.error) {
+                throw new Error(result.error?.message || result.error || 'AI 请求失败');
+            }
+
+            renameProgressBar.style.width = '80%';
+            renameProgressText.textContent = '正在解析 AI 返回结果...';
+
+            const aiContent = result.data?.choices?.[0]?.message?.content
+                           || result.choices?.[0]?.message?.content
+                           || '';
+            let names = [];
+            try {
+                const jsonMatch = aiContent.match(/\[\s*\{[\s\S]*?\}\s*\]/);
+                if (jsonMatch) names = JSON.parse(jsonMatch[0]);
+                else names = JSON.parse(aiContent);
+            } catch {
+                const lines = aiContent.split('\n').filter(l => l.trim().startsWith('['));
+                names = lines.map((l, i) => ({ index: i, name: l.trim() }));
+            }
+
+            names.forEach(item => {
+                const idx = item.index;
+                if (idx >= 0 && idx < renameItems.length) {
+                    renameItems[idx].newName = item.name;
+                }
+            });
+
+            renameProgressBar.style.width = '100%';
+            renameProgressText.textContent = '全部完成！已命名 ' + names.length + ' 张图片';
+            renderRenameCards();
+            updateRenameToolbar();
+            downloadRenamedBtn.style.display = 'inline-block';
+            await dbPut('state', 'renameItems', renameItems.map(r => ({
+                oldName: r.oldName, newName: r.newName, imgB64: r.imgB64
+            })));
+            toast('AI 重命名完成！可编辑后下载', 'success');
+        } catch (e) {
+            toast('AI 重命名失败: ' + e.message, 'error');
+            renameProgressText.textContent = '失败: ' + e.message;
+        } finally {
+            startRenameBtn.disabled = false;
+            startRenameBtn.textContent = '开始 AI 重命名';
+        }
+    });
+
+    downloadRenamedBtn.addEventListener('click', async () => {
+        const items = renameItems
+            .filter(r => r.newName && r.imgB64)
+            .map(r => ({ name: r.newName, imageData: r.imgB64 }));
+        if (items.length === 0) { toast('没有可下载的图片', 'error'); return; }
+
+        downloadRenamedBtn.disabled = true;
+        downloadRenamedBtn.textContent = '打包中...';
+        toast('正在打包图片...');
+
+        try {
+            const resp = await fetch(BACKEND + '/api/download-renamed', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ items })
+            });
+            if (!resp.ok) throw new Error('打包失败');
+            const blob = await resp.blob();
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'coloring_pages_renamed.zip';
+            document.body.appendChild(a); a.click(); a.remove();
+            URL.revokeObjectURL(a.href);
+            toast('下载完成！', 'success');
+        } catch (e) {
+            toast('下载失败: ' + e.message, 'error');
+        } finally {
+            downloadRenamedBtn.disabled = false;
+            downloadRenamedBtn.textContent = '下载打包 ZIP';
+        }
+    });
+
+    /* ═══════════════ 初始化 ═══════════════ */
+    openDB().then(async () => {
+        await loadAppState();
+        // 恢复重命名数据
+        const savedRename = await dbGet('state', 'renameItems');
+        if (savedRename && savedRename.length > 0) {
+            renameItems = savedRename;
+        }
+        // 恢复第一页已确认状态
+        if (isConfirmed && p1ConfirmedImages.length > 0) {
+            allImages = p1ConfirmedImages.slice();
+            displayedImages = allImages.slice();
+            currentIndex = allImages.length;
+            toolbar.classList.remove('visible');
+            confirmedBar.classList.add('visible');
+            confirmedCount.textContent = allImages.length;
+            totalCount.textContent = allImages.length;
+            nextPageBar.classList.add('visible');
+            // 渲染卡片
+            gallery.innerHTML = '';
+            allImages.forEach(img => gallery.appendChild(createCard(img)));
+            showCount.textContent = allImages.length;
+        }
+        showPage(currentPage);
+    }).catch(() => {
+        // IndexedDB 不可用时仍可正常使用
+        showPage(1);
+    });
+})();
+</script>
+</body>
+</html>
