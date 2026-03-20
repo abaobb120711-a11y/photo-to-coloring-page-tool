@@ -540,7 +540,7 @@
     const BACKEND = window.__BACKEND_URL__
         || (location.hostname === 'localhost' || location.hostname === '127.0.0.1'
             ? location.protocol + '//' + location.hostname + ':5002'
-            : '');  // ← 线上部署时在此填入后端地址
+            : 'https://photo-to-coloring-page-tool-production.up.railway.app');
     const BATCH_SIZE = 50;
 
     function toast(msg, type = '') {
@@ -1817,3 +1817,4 @@
 </script>
 </body>
 </html>
+
