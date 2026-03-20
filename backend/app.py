@@ -244,22 +244,8 @@ def best_from_srcset(srcset: str) -> str:
     return best_src
 
 
-# ── /scrape ──────────────────────────────────────────────────────
-@app.route('/scrape', methods=['POST', 'OPTIONS'])
-def scrape():
-    if request.method == 'OPTIONS':
-        return jsonify({}), 200
-
-    data = request.get_json(silent=True) or {}
-    url = (data.get('url') or '').strip()
-    if not url:
-        return jsonify({'error': 'URL 为空'}), 400
-
-    try:
-        html = fetch_page_html(url)
-    except Exception as e:
-        return jsonify({'error': f'无法访问该页面: {e}'}), 500
-
+# ── 从 HTML 中提取图片 ──────────────────────────────────────────
+def _extract_images_from_html(html: str, url: str) -> list[dict]:
     soup = BeautifulSoup(html, 'html.parser')
     parsed_base = urlparse(url)
     seen: set[str] = set()
@@ -287,12 +273,10 @@ def scrape():
             return
         seen.add(src)
         alt = (alt or '').replace('_', ' ').strip()
-        # 跳过没有 alt name 的图片
         if not alt:
             return
         images.append({'src': src, 'alt': alt})
 
-    # 1. 标准 <img> 标签
     for img in soup.find_all('img'):
         if not isinstance(img, Tag):
             continue
@@ -310,7 +294,6 @@ def scrape():
         if src:
             add_image(src, alt)
 
-    # 2. <source> 标签
     for source in soup.find_all('source'):
         if not isinstance(source, Tag):
             continue
@@ -320,12 +303,10 @@ def scrape():
             if src:
                 add_image(src, 'picture_source')
 
-    # 3. <video poster> 标签
     for video in soup.find_all('video', poster=True):
         if isinstance(video, Tag):
             add_image(str(video['poster']), 'video_poster')
 
-    # 4. <a> 标签中直接链接到图片的
     for a in soup.find_all('a', href=True):
         if not isinstance(a, Tag):
             continue
@@ -333,7 +314,6 @@ def scrape():
         if re.search(r'\.(jpg|jpeg|png|gif|webp|svg|bmp)(\?|$)', href, re.I):
             add_image(href, str(a.get('title') or ''))
 
-    # 5. CSS background-image
     for el in soup.find_all(style=True):
         if not isinstance(el, Tag):
             continue
@@ -342,14 +322,12 @@ def scrape():
             if re.search(r'\.(jpg|jpeg|png|gif|webp|svg|bmp)', u, re.I):
                 add_image(u, 'bg_image')
 
-    # 6. 正则匹配 HTML 中的图片 URL
     for m in re.finditer(
         r'https?://[^\s"\'<>]+?\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?[^\s"\'<>]*)?',
         html, re.I
     ):
         add_image(m.group(0), 'found_image')
 
-    # 7. meta 标签中的图片
     for meta in soup.find_all('meta'):
         if not isinstance(meta, Tag):
             continue
@@ -359,7 +337,6 @@ def scrape():
             if content.startswith('http'):
                 add_image(content, 'meta_image')
 
-    # 8. JSON-LD 结构化数据中的图片
     for script in soup.find_all('script', type='application/ld+json'):
         try:
             obj = json.loads(script.string or '')
@@ -367,6 +344,42 @@ def scrape():
         except Exception:
             pass
 
+    return images
+
+
+# ── /scrape ──────────────────────────────────────────────────────
+@app.route('/scrape', methods=['POST', 'OPTIONS'])
+def scrape():
+    if request.method == 'OPTIONS':
+        return jsonify({}), 200
+
+    data = request.get_json(silent=True) or {}
+    url = (data.get('url') or '').strip()
+    if not url:
+        return jsonify({'error': 'URL 为空'}), 400
+
+    # 先用 requests 快速抓取
+    html = None
+    try:
+        r = _session.get(url, timeout=15, allow_redirects=True)
+        r.raise_for_status()
+        if 'just a moment' not in r.text[:2000].lower():
+            html = r.text
+    except Exception:
+        pass
+
+    if html:
+        images = _extract_images_from_html(html, url)
+        if images:
+            return jsonify(images)
+
+    # requests 没拿到图片（或遇 Cloudflare），用 Playwright 重试
+    try:
+        html = _playwright_fetch(url)
+    except Exception as e:
+        return jsonify({'error': f'无法访问该页面: {e}'}), 500
+
+    images = _extract_images_from_html(html, url)
     return jsonify(images)
 
 
