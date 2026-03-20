@@ -15,5 +15,5 @@ RUN playwright install --with-deps chromium
 
 COPY . .
 
-CMD gunicorn app:app --timeout 200 --workers 2 --bind 0.0.0.0:${PORT:-5002}
+CMD ["sh", "-c", "gunicorn app:app --timeout 200 --workers 2 --bind 0.0.0.0:${PORT:-5002}"]
 
