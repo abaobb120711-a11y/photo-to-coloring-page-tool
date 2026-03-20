@@ -113,7 +113,7 @@ HEADERS = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,"
               "image/avif,image/webp,image/apng,*/*;q=0.8",
     "Accept-Language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
-    "Accept-Encoding": "gzip, deflate, br",
+    "Accept-Encoding": "gzip, deflate",
     "Cache-Control": "no-cache",
     "Pragma": "no-cache",
     "Sec-Ch-Ua": '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
@@ -155,6 +155,79 @@ def do_request(url, stream=False, timeout=25):
     return r
 
 
+def _try_mediawiki_api(url: str) -> list[dict] | None:
+    """如果 URL 是 MediaWiki 站点（Fandom/Wikia 等），用 API 获取图片列表，绕过 Cloudflare。"""
+    parsed = urlparse(url)
+    host = parsed.netloc.lower()
+
+    # 检测 Fandom / Wikia / 其他 MediaWiki 站点
+    is_wiki = any(d in host for d in ['fandom.com', 'wikia.com', 'wikia.org',
+                                       'wikipedia.org', 'wikimedia.org',
+                                       'fextralife.com', 'wiki.gg'])
+    if not is_wiki and '/wiki/' not in parsed.path:
+        return None
+
+    # 从 URL 提取页面名称
+    path = parsed.path
+    wiki_match = re.search(r'/wiki/(.+?)(?:\?|#|$)', path)
+    if not wiki_match:
+        return None
+    page_name = wiki_match.group(1)
+
+    # 构建 API URL
+    api_base = f"{parsed.scheme}://{parsed.netloc}/api.php"
+    try:
+        resp = _session.get(api_base, params={
+            'action': 'parse', 'page': page_name,
+            'prop': 'text', 'format': 'json'
+        }, timeout=20)
+        resp.raise_for_status()
+        data = resp.json()
+        if 'parse' not in data or 'text' not in data['parse']:
+            return None
+        html = data['parse']['text']['*']
+        images = _extract_images_from_html(html, url)
+        if images:
+            return images
+    except Exception:
+        pass
+
+    # 备选：用 imageinfo API 获取图片直链
+    try:
+        resp = _session.get(api_base, params={
+            'action': 'parse', 'page': page_name,
+            'prop': 'images', 'format': 'json'
+        }, timeout=20)
+        resp.raise_for_status()
+        data = resp.json()
+        filenames = data.get('parse', {}).get('images', [])
+        if not filenames:
+            return None
+
+        images = []
+        # 分批查询图片 URL（每次最多50个）
+        for i in range(0, len(filenames), 50):
+            batch = filenames[i:i+50]
+            titles = '|'.join('File:' + f for f in batch)
+            resp2 = _session.get(api_base, params={
+                'action': 'query', 'titles': titles,
+                'prop': 'imageinfo', 'iiprop': 'url',
+                'format': 'json'
+            }, timeout=20)
+            resp2.raise_for_status()
+            pages = resp2.json().get('query', {}).get('pages', {})
+            for pid, pdata in pages.items():
+                ii = pdata.get('imageinfo', [{}])
+                img_url = ii[0].get('url', '') if ii else ''
+                if img_url and re.search(r'\.(jpg|jpeg|png|gif|webp)(\?|$)', img_url, re.I):
+                    alt = pdata.get('title', '').replace('File:', '').replace('_', ' ')
+                    alt = re.sub(r'\.[a-zA-Z]{2,5}$', '', alt)
+                    images.append({'src': img_url, 'alt': alt or 'image'})
+        return images if images else None
+    except Exception:
+        return None
+
+
 def _playwright_fetch(url: str) -> str:
     """在子进程中用 Playwright 获取页面 HTML（避免与 Flask 线程冲突）。"""
     import subprocess, sys
@@ -163,17 +236,23 @@ import sys
 from playwright.sync_api import sync_playwright
 pw = sync_playwright().start()
 browser = pw.chromium.launch(headless=True, args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-blink-features=AutomationControlled"])
-ctx = browser.new_context(viewport={{"width":1920,"height":1080}})
+ctx = browser.new_context(
+    viewport={{"width":1920,"height":1080}},
+    user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+)
 page = ctx.new_page()
 page.goto(sys.argv[1], wait_until="domcontentloaded", timeout=30000)
-for _ in range(12):
+for _ in range(15):
     t = page.title()
-    if "moment" not in t.lower() and "checking" not in t.lower():
+    html_snippet = page.content()[:3000].lower()
+    if "just a moment" not in t.lower() and "checking" not in t.lower() and "cf_chl" not in html_snippet:
         break
-    page.wait_for_timeout(2500)
+    page.wait_for_timeout(2000)
 page.wait_for_timeout(3000)
 page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
 page.wait_for_timeout(2000)
+page.evaluate("window.scrollTo(0, document.body.scrollHeight / 2)")
+page.wait_for_timeout(1000)
 html = page.content()
 ctx.close()
 browser.close()
@@ -189,16 +268,15 @@ sys.stdout.buffer.write(html.encode("utf-8"))
     return result.stdout.decode('utf-8')
 
 
-def fetch_page_html(url: str) -> str:
-    """先用 requests 尝试获取页面 HTML，若遇 Cloudflare 则用 Playwright 子进程。"""
-    try:
-        r = _session.get(url, timeout=15, allow_redirects=True)
-        r.raise_for_status()
-        if 'just a moment' not in r.text[:2000].lower():
-            return r.text
-    except Exception:
-        pass
-    return _playwright_fetch(url)
+def _is_cloudflare_page(html: str) -> bool:
+    """检测 HTML 是否仍然是 Cloudflare 挑战页。"""
+    if len(html) < 60000:
+        lower = html[:5000].lower()
+        if 'cf_chl' in html or '__cf_chl_tk' in html:
+            return True
+        if 'just a moment' in lower and 'cloudflare' in lower:
+            return True
+    return False
 
 
 def clean_image_url(url: str) -> str:
@@ -384,11 +462,20 @@ def scrape():
         if images:
             return jsonify(images)
 
-    # requests 没拿到图片（或遇 Cloudflare），用 Playwright 重试
+    # requests 没拿到图片 → 尝试 MediaWiki API（Fandom/Wikia 等）
+    wiki_images = _try_mediawiki_api(url)
+    if wiki_images:
+        return jsonify(wiki_images)
+
+    # 最后用 Playwright 重试
     try:
         html = _playwright_fetch(url)
     except Exception as e:
         return jsonify({'error': f'无法访问该页面: {e}'}), 500
+
+    # 检测 Playwright 是否也被 Cloudflare 拦截了
+    if _is_cloudflare_page(html):
+        return jsonify({'error': '该网站启用了 Cloudflare 防护，暂时无法抓取。请尝试其他网站，或直接上传图片。'}), 403
 
     images = _extract_images_from_html(html, url)
     return jsonify(images)
