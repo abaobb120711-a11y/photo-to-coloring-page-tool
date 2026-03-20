@@ -157,7 +157,7 @@ def _playwright_fetch(url: str) -> str:
 import sys
 from playwright.sync_api import sync_playwright
 pw = sync_playwright().start()
-browser = pw.chromium.launch(headless=True, args=["--disable-blink-features=AutomationControlled", "--no-sandbox"])
+browser = pw.chromium.launch(headless=True, args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-blink-features=AutomationControlled"])
 ctx = browser.new_context(viewport={{"width":1920,"height":1080}})
 page = ctx.new_page()
 page.goto(sys.argv[1], wait_until="domcontentloaded", timeout=30000)
@@ -652,3 +652,5 @@ if __name__ == '__main__':
     print(f'\n[OK] 后端已启动: http://0.0.0.0:{port}')
     print('[提示] 如遇 Cloudflare 保护网站，将自动启动浏览器引擎处理\n')
     app.run(host='0.0.0.0', debug=False, port=port)
+
+
