@@ -95,6 +95,11 @@ def _cors(resp):
     return resp
 
 
+@app.route('/')
+def health():
+    return jsonify({'status': 'ok'})
+
+
 # ── 代理设置：云端留空，本地可通过环境变量 PROXY_URL 配置 ──
 _proxy_url = os.environ.get("PROXY_URL", "").strip()
 PROXIES = {"http": _proxy_url, "https": _proxy_url} if _proxy_url else None
@@ -273,8 +278,14 @@ def _extract_images_from_html(html: str, url: str) -> list[dict]:
             return
         seen.add(src)
         alt = (alt or '').replace('_', ' ').strip()
+        # 如果没有 alt，从 URL 文件名生成
         if not alt:
-            return
+            path_part = src.split('?')[0].split('#')[0]
+            fname = path_part.rsplit('/', 1)[-1] if '/' in path_part else ''
+            fname = re.sub(r'\.[a-zA-Z]{2,5}$', '', fname)
+            alt = fname.replace('_', ' ').replace('-', ' ').strip()
+        if not alt:
+            alt = 'image'
         images.append({'src': src, 'alt': alt})
 
     for img in soup.find_all('img'):
