@@ -616,15 +616,8 @@ def api_generate():
         except Exception:
             pass
 
-    # 检测图片尺寸，自动选择最接近原图的输出比例
-    size = '1:1'
-    if img_bytes:
-        try:
-            pil_img = PILImage.open(io.BytesIO(img_bytes))
-            w, h = pil_img.size
-            size = best_aspect_ratio(w, h)
-        except Exception:
-            pass
+    # 固定输出比例为 2:3（1365×2048）
+    size = '2:3'
 
     try:
         resp = requests.post(
