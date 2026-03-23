@@ -1447,16 +1447,31 @@
             try {
                 const resp = await fetch(BACKEND + '/api/task/' + item.taskId + '?apiKey=' + encodeURIComponent(apiKey));
                 const data = await resp.json();
+                console.log('[pollTask] raw response:', JSON.stringify(data).slice(0, 500));
                 const taskData = data.data || data;
-                const status = taskData.status;
+                const status = (taskData.status || '').toLowerCase();
 
-                if (status === 'completed') {
-                    const imgUrl = taskData.result?.images?.[0]?.url?.[0];
+                if (status === 'completed' || status === 'success' || status === 'succeeded' || status === 'finished') {
+                    // 兼容多种 API 返回格式提取图片 URL
+                    let imgUrl = null;
+                    const r = taskData.result || taskData.output || taskData;
+                    if (r?.images) {
+                        const firstImg = r.images[0];
+                        if (firstImg) {
+                            const u = firstImg.url;
+                            imgUrl = Array.isArray(u) ? u[0] : u;
+                            if (!imgUrl) imgUrl = firstImg.b64_json ? ('data:image/png;base64,' + firstImg.b64_json) : null;
+                        }
+                    }
+                    if (!imgUrl && r?.image_url) imgUrl = r.image_url;
+                    if (!imgUrl && r?.url) imgUrl = Array.isArray(r.url) ? r.url[0] : r.url;
+                    console.log('[pollTask] completed, imgUrl:', imgUrl ? imgUrl.slice(0, 80) : null);
                     if (!imgUrl) throw new Error('结果中无图片 URL');
                     item.resultUrl = imgUrl;
                     // 下载结果图并转为 base64 以便持久化
                     try {
-                        const imgResp = await fetch(BACKEND + '/proxy?url=' + encodeURIComponent(imgUrl));
+                        const proxyUrl = imgUrl.startsWith('data:') ? imgUrl : BACKEND + '/proxy?url=' + encodeURIComponent(imgUrl);
+                        const imgResp = await fetch(proxyUrl);
                         const blob = await imgResp.blob();
                         item.resultB64 = await new Promise(resolve => {
                             const reader = new FileReader();
@@ -1468,8 +1483,8 @@
                     refreshGenCard(idx);
                     saveAppState();
                     return;
-                } else if (status === 'failed') {
-                    throw new Error(taskData.error?.message || '任务失败');
+                } else if (status === 'failed' || status === 'error' || status === 'cancelled') {
+                    throw new Error(taskData.error?.message || taskData.message || '任务失败');
                 }
                 // pending / processing -> continue
             } catch (e) {
@@ -1817,4 +1832,3 @@
 </script>
 </body>
 </html>
-
