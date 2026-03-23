@@ -654,7 +654,10 @@ def api_task(task_id):
             headers={'Authorization': f'Bearer {api_key}'},
             timeout=30
         )
-        return jsonify(resp.json()), resp.status_code
+        body = resp.json()
+        import json as _json
+        print(f'[task/{task_id}] apimart response ({resp.status_code}): {_json.dumps(body, ensure_ascii=False)[:800]}', flush=True)
+        return jsonify(body), resp.status_code
     except Exception as e:
         return jsonify({'error': f'查询任务失败: {e}'}), 500
 
@@ -756,6 +759,7 @@ if __name__ == '__main__':
     print(f'\n[OK] 后端已启动: http://0.0.0.0:{port}')
     print('[提示] 如遇 Cloudflare 保护网站，将自动启动浏览器引擎处理\n')
     app.run(host='0.0.0.0', debug=False, port=port)
+
 
 
 
