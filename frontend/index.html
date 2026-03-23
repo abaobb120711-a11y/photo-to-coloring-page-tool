@@ -1240,6 +1240,32 @@
         }
         renderGenGallery();
         updateGenInfo();
+
+        // 恢复因页面刷新中断的任务
+        const apiKey = getApiKey();
+        if (apiKey) {
+            genItems.forEach((item, idx) => {
+                if (item.status === 'polling' && item.taskId) {
+                    // 有 taskId，恢复轮询
+                    console.log('[initPage2] resuming poll for idx', idx, 'taskId', item.taskId);
+                    pollTask(idx, apiKey).then(() => updateProgress());
+                } else if (item.status === 'generating' || (item.status === 'polling' && !item.taskId)) {
+                    // 提交中断或无 taskId，重置为 error 让用户手动重试
+                    item.status = 'error';
+                    item.error = '页面刷新导致任务中断，请重新生成';
+                    refreshGenCard(idx);
+                }
+            });
+        } else {
+            // 没有 API key，将中间态任务标为 error
+            genItems.forEach((item, idx) => {
+                if (item.status === 'generating' || item.status === 'polling') {
+                    item.status = 'error';
+                    item.error = '页面刷新导致任务中断，请设置 API Key 后重新生成';
+                    refreshGenCard(idx);
+                }
+            });
+        }
     }
 
     function updateGenInfo() {
@@ -1447,14 +1473,17 @@
             try {
                 const resp = await fetch(BACKEND + '/api/task/' + item.taskId + '?apiKey=' + encodeURIComponent(apiKey));
                 const data = await resp.json();
-                console.log('[pollTask] raw response:', JSON.stringify(data).slice(0, 500));
-                const taskData = data.data || data;
-                const status = (taskData.status || '').toLowerCase();
+                console.log('[pollTask] raw response:', JSON.stringify(data).slice(0, 800));
+                // 从响应中多层查找 status（兼容 {status,data:{images}} 和 {data:{status,result:{images}}} 两种结构）
+                const status = ((data.status || data.data?.status || data.data?.data?.status || '')).toLowerCase();
+                // 合并所有可能的数据层
+                const taskData = data.data?.result || data.data?.output || data.data || data.result || data.output || data;
+                console.log('[pollTask] parsed status:', status, 'taskData keys:', Object.keys(taskData));
 
-                if (status === 'completed' || status === 'success' || status === 'succeeded' || status === 'finished') {
+                if (status === 'completed' || status === 'success' || status === 'succeeded' || status === 'finished' || status === 'done') {
                     // 兼容多种 API 返回格式提取图片 URL
                     let imgUrl = null;
-                    const r = taskData.result || taskData.output || taskData;
+                    const r = taskData.images ? taskData : (taskData.result || taskData.output || taskData);
                     if (r?.images) {
                         const firstImg = r.images[0];
                         if (firstImg) {
@@ -1484,7 +1513,8 @@
                     saveAppState();
                     return;
                 } else if (status === 'failed' || status === 'error' || status === 'cancelled') {
-                    throw new Error(taskData.error?.message || taskData.message || '任务失败');
+                    const errMsg = data.error?.message || data.data?.error?.message || taskData.error?.message || taskData.message || data.message || '任务失败';
+                    throw new Error(errMsg);
                 }
                 // pending / processing -> continue
             } catch (e) {
