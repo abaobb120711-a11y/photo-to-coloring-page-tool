@@ -754,11 +754,117 @@ def download_renamed():
                      mimetype='application/zip')
 
 
+# ── 德语词表对照（来自 xlsx 对照表） ────────────────────────────
+EN_DE_DICT = {
+    "Sports": "Sport",
+    "Cars": "Autos",
+    "Anime": "Anime",
+    "Landscapes": "Landschaften",
+    "Seasons": "Jahreszeiten",
+    "Animals": "Tiere",
+    "Insects": "Insekten",
+    "Holidays": "Feiertage",
+    "Months": "Monate",
+    "Religious Holidays": "Religiöse Feiertage",
+    "International Holidays": "Internationale Feiertage",
+    "Common Holidays": "Allgemeine Feiertage",
+    "Transportation": "Verkehrsmittel",
+    "Flowers and Plants": "Blumen und Pflanzen",
+    "Airplanes": "Flugzeuge",
+    "Ships": "Schiffe",
+    "Spaceships": "Raumschiffe",
+    "Food": "Essen",
+    "Fruits": "Früchte",
+    "Vegetables": "Gemüse",
+    "Desserts": "Desserts",
+    "Fantasy": "Fantasie",
+    "Internet Trends": "Internettrends",
+    "Sanrio": "Sanrio",
+    "Lifestyle": "Lebensstil",
+    "Historical Figures": "Historische Persönlichkeiten",
+    "Superheroes": "Superhelden",
+    "Animated Movies": "Animationsfilme",
+    "Japanese Anime": "Japanische Anime",
+    "American Anime": "Amerikanische Zeichentrickserien",
+    "Chinese Anime": "Chinesische Anime",
+    "Games": "Spiele",
+    "Video Games": "Videospiele",
+    "Mobile Games": "Mobile Games",
+    "Characters": "Figuren",
+    "Football Stars": "Fußballstars",
+    "Celebrity": "Promis",
+    "Nature": "Natur",
+    "Occupations": "Berufe",
+    "Disney Princesses": "Disney Prinzessinnen",
+    "Themes": "Themen",
+    "Architecture": "Architektur",
+    "Religion": "Religion",
+    "Lego": "Lego",
+    "Marvel": "Marvel",
+    "DC": "DC",
+    "Pixar": "Pixar",
+    "DreamWorks": "DreamWorks",
+    "Disney": "Disney",
+    "Studio Ghibli": "Studio Ghibli",
+    "Horror": "Horror",
+    "Clothing": "Kleidung",
+    "Toys": "Spielzeug",
+}
+
+# 构建小写查找表
+_en_de_lower = {k.lower(): v for k, v in EN_DE_DICT.items()}
+
+
+@app.route('/api/dict', methods=['GET', 'OPTIONS'])
+def api_dict():
+    """返回完整词表"""
+    if request.method == 'OPTIONS':
+        return jsonify({}), 200
+    return jsonify(EN_DE_DICT)
+
+
+@app.route('/api/translate', methods=['POST', 'OPTIONS'])
+def api_translate():
+    """输入多行文本，每行逗号分隔的英文标签 → 查词表替换为德文，保持格式不变"""
+    if request.method == 'OPTIONS':
+        return jsonify({}), 200
+    data = request.get_json(silent=True) or {}
+    lines = data.get('lines', [])
+    if not lines or not isinstance(lines, list):
+        return jsonify({'error': '请提供 lines 数组'}), 400
+
+    result_lines = []
+    total = 0
+    matched = 0
+    unmatched_set = set()
+    for line in lines:
+        tags = [t.strip() for t in str(line).split(',') if t.strip()]
+        de_tags = []
+        for tag in tags:
+            total += 1
+            lower = tag.lower()
+            if lower in _en_de_lower:
+                de_tags.append(_en_de_lower[lower])
+                matched += 1
+            else:
+                de_tags.append(tag)  # 未匹配保留原文
+                unmatched_set.add(tag)
+        result_lines.append(','.join(de_tags))
+
+    return jsonify({
+        'result_lines': result_lines,
+        'total': total,
+        'matched': matched,
+        'unmatched': sorted(unmatched_set),
+    })
+
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5002))
     print(f'\n[OK] 后端已启动: http://0.0.0.0:{port}')
     print('[提示] 如遇 Cloudflare 保护网站，将自动启动浏览器引擎处理\n')
     app.run(host='0.0.0.0', debug=False, port=port)
+
 
 
 
