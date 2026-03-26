@@ -142,7 +142,14 @@ _session.headers.update(HEADERS)
 # ── 工具函数 ─────────────────────────────────────────────────────
 def do_request(url, stream=False, timeout=25):
     """用 requests 下载图片数据。"""
-    kwargs = dict(timeout=timeout, stream=stream, allow_redirects=True)
+    parsed = urlparse(url)
+    # 为目标域名设置对应的 Referer，避免防盗链拦截（Wikimedia 等）
+    extra_headers = {
+        'Referer': f"{parsed.scheme}://{parsed.netloc}/",
+        'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+    }
+    kwargs = dict(timeout=timeout, stream=stream, allow_redirects=True,
+                  headers=extra_headers)
     if PROXIES:
         try:
             r = _session.get(url, proxies=PROXIES, **kwargs)
@@ -507,11 +514,14 @@ def proxy_image():
     if not image_url:
         return jsonify({'error': 'url 参数缺失'}), 400
     try:
-        r = do_request(image_url, stream=True, timeout=15)
+        r = do_request(image_url, stream=True, timeout=20)
         ct = r.headers.get('Content-Type', 'image/jpeg')
+        if not r.content or len(r.content) < 100:
+            return Response(b'', content_type='image/png', status=502)
         return Response(r.content, content_type=ct)
-    except Exception:
-        return Response(b'', content_type='image/png', status=200)
+    except Exception as e:
+        app.logger.warning('Proxy fetch failed for %s: %s', image_url, e)
+        return Response(b'', content_type='image/png', status=502)
 
 
 # ── /download-image （单张下载）──────────────────────────────────
@@ -864,6 +874,7 @@ if __name__ == '__main__':
     print(f'\n[OK] 后端已启动: http://0.0.0.0:{port}')
     print('[提示] 如遇 Cloudflare 保护网站，将自动启动浏览器引擎处理\n')
     app.run(host='0.0.0.0', debug=False, port=port)
+
 
 
 
