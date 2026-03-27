@@ -759,15 +759,6 @@
         setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 3000);
     }
 
-    /* ═══════════════ 多标签页隔离 ═══════════════ */
-    // 每个标签页生成唯一 sessionId，IndexedDB 键名用 sessionId 前缀
-    let SESSION_ID = sessionStorage.getItem('tab_session_id');
-    if (!SESSION_ID) {
-        SESSION_ID = 'tab_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
-        sessionStorage.setItem('tab_session_id', SESSION_ID);
-    }
-    function sKey(key) { return SESSION_ID + ':' + key; }
-
     /* ═══════════════ IndexedDB 持久化 ═══════════════ */
     const DB_NAME = 'ColoringToolDB';
     const DB_VER = 1;
@@ -846,24 +837,25 @@
             }
             imgs.push({ src: img.src, alt: img.alt, _b64: b64 });
         }
-        await dbPut('state', sKey('confirmedImages'), imgs);
-        await dbPut('state', sKey('currentPage'), currentPage);
-        await dbPut('state', sKey('isConfirmed'), isConfirmed);
+        await dbPut('state', 'confirmedImages', imgs);
+        await dbPut('state', 'currentPage', currentPage);
+        await dbPut('state', 'isConfirmed', isConfirmed);
         // 保存第二页生成结果（即使为空也保存，确保删除生效）
         const genData = genItems.map(g => ({
             src: g.src, alt: g.alt, _b64: g._b64 || null,
             resultUrl: g.resultUrl || null, resultB64: g.resultB64 || null,
             status: g.status, error: g.error || null, taskId: g.taskId || null
         }));
-        await dbPut('state', sKey('genItems'), genData);
+        await dbPut('state', 'genItems', genData);
     }
 
     async function loadAppState() {
         if (!db) return;
-        const saved = await dbGet('state', sKey('confirmedImages'));
-        const page = await dbGet('state', sKey('currentPage'));
-        const confirmed = await dbGet('state', sKey('isConfirmed'));
-        const savedGen = await dbGet('state', sKey('genItems'));
+        let saved = await dbGet('state', 'confirmedImages');
+        let page = await dbGet('state', 'currentPage');
+        let confirmed = await dbGet('state', 'isConfirmed');
+        let savedGen = await dbGet('state', 'genItems');
+
         if (saved && saved.length > 0) {
             p1ConfirmedImages = saved;
             isConfirmed = confirmed || false;
@@ -878,11 +870,11 @@
     // 清空当前标签页的所有持久化数据和内存状态（用于完成一个主题后重新开始）
     async function clearAllState() {
         if (!db) return;
-        await dbDelete('state', sKey('confirmedImages'));
-        await dbDelete('state', sKey('currentPage'));
-        await dbDelete('state', sKey('isConfirmed'));
-        await dbDelete('state', sKey('genItems'));
-        await dbDelete('state', sKey('renameItems'));
+        await dbDelete('state', 'confirmedImages');
+        await dbDelete('state', 'currentPage');
+        await dbDelete('state', 'isConfirmed');
+        await dbDelete('state', 'genItems');
+        await dbDelete('state', 'renameItems');
         // 重置内存状态
         p1ConfirmedImages = [];
         isConfirmed = false;
@@ -2129,7 +2121,7 @@
             renderRenameCards();
             updateRenameToolbar();
             downloadRenamedBtn.style.display = 'inline-block';
-            await dbPut('state', sKey('renameItems'), renameItems.map(r => ({
+            await dbPut('state', 'renameItems', renameItems.map(r => ({
                 oldName: r.oldName, newName: r.newName, imgB64: r.imgB64
             })));
             toast('AI 重命名完成！可编辑后下载', 'success');
