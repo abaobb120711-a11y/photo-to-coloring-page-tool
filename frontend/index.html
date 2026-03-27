@@ -563,6 +563,15 @@
         <button id="scrapeBtn">开始抓取</button>
         <button id="directImportBtn" style="background:#1890ff">上传图片</button>
     </div>
+    <div style="margin:6px 0 0 2px;display:flex;align-items:center;gap:10px;">
+        <label style="display:flex;align-items:center;gap:4px;font-size:13px;color:#555;cursor:pointer;">
+            <input type="checkbox" id="deepScrapeCheck" />
+            自动爬取分页（翻页抓取更多图片）
+        </label>
+        <label id="maxPagesLabel" style="display:none;align-items:center;gap:4px;font-size:13px;color:#555;">
+            最多页数: <input type="number" id="maxPagesInput" value="10" min="2" max="50" style="width:50px;padding:2px 4px;border:1px solid #ccc;border-radius:4px;" />
+        </label>
+    </div>
     <input type="file" id="directFileInput" multiple accept="image/*" style="display:none" />
 
     <div class="toolbar" id="toolbar">
@@ -627,6 +636,7 @@
             <button class="btn-select-all" id="genSelectAllBtn">全选</button>
             <button class="btn-deselect" id="genDeselectBtn">取消全选</button>
             <button class="btn-gen-all" id="genAllBtn">开始生成全部</button>
+            <button class="btn-gen-all" id="genRetryFailedBtn" style="background:linear-gradient(135deg,#ff4d4f,#cf1322)">失败重新生成</button>
             <button class="btn-gen-all" id="genSelectedBtn" style="background:linear-gradient(135deg,#fa8c16,#f5222d)">生成选中</button>
             <button class="btn-delete-sel" id="genDeleteSelBtn">删除选中</button>
             <button class="btn-dl-results" id="dlResultsBtn">下载全部结果</button>
@@ -1026,29 +1036,53 @@
         loadMoreBar.classList.toggle('visible', currentIndex < allImages.length);
     }
 
+    // 深度抓取显示/隐藏
+    const deepScrapeCheck = document.getElementById('deepScrapeCheck');
+    const maxPagesLabel = document.getElementById('maxPagesLabel');
+    const maxPagesInput = document.getElementById('maxPagesInput');
+    deepScrapeCheck.addEventListener('change', () => {
+        maxPagesLabel.style.display = deepScrapeCheck.checked ? 'flex' : 'none';
+    });
+
     async function doScrape() {
         const url = urlInput.value.trim();
         if (!url) { toast('请输入网址', 'error'); return; }
+        const deep = deepScrapeCheck.checked;
+        const maxPages = parseInt(maxPagesInput.value) || 10;
         scrapeBtn.disabled = true;
-        scrapeBtn.textContent = '抓取中...';
+        scrapeBtn.textContent = deep ? '深度抓取中...' : '抓取中...';
+        // 清空当前抓取展示区，但不清除已确认的图片
         gallery.innerHTML = '';
         displayedImages = []; allImages = []; currentIndex = 0;
         toolbar.classList.remove('visible');
         loadMoreBar.classList.remove('visible');
-        confirmedBar.classList.remove('visible');
-        nextPageBar.classList.remove('visible');
-        isConfirmed = false;
+        // 如果已有确认图片，保持确认栏可见
+        if (p1ConfirmedImages.length > 0) {
+            confirmedBar.classList.add('visible');
+            confirmedCount.textContent = p1ConfirmedImages.length;
+            nextPageBar.classList.add('visible');
+        } else {
+            confirmedBar.classList.remove('visible');
+            nextPageBar.classList.remove('visible');
+            isConfirmed = false;
+        }
         statusMsg.classList.add('visible');
         try {
             const resp = await fetch(BACKEND + '/scrape', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url })
+                body: JSON.stringify({ url, deep, maxPages })
             });
             if (!resp.ok) { const e = await resp.json().catch(() => ({})); throw new Error(e.error || '请求失败'); }
-            allImages = await resp.json();
+            let newImages = await resp.json();
+            // 去除与已确认图片重复的
+            if (p1ConfirmedImages.length > 0) {
+                const confirmedSrcs = new Set(p1ConfirmedImages.map(i => i.src));
+                newImages = newImages.filter(i => !confirmedSrcs.has(i.src));
+            }
+            allImages = newImages;
             totalCount.textContent = allImages.length;
-            if (allImages.length === 0) { toast('该页面未找到可用图片', 'error'); }
-            else { toolbar.classList.add('visible'); renderBatch(); toast(`成功抓取 ${allImages.length} 张图片`, 'success'); }
+            if (allImages.length === 0) { toast('该页面未找到新图片', 'error'); }
+            else { toolbar.classList.add('visible'); renderBatch(); toast(`成功抓取 ${allImages.length} 张新图片`, 'success'); }
         } catch (e) { toast('抓取失败: ' + e.message, 'error'); }
         finally { scrapeBtn.disabled = false; scrapeBtn.textContent = '开始抓取'; statusMsg.classList.remove('visible'); }
     }
@@ -1132,7 +1166,7 @@
             (cb && cb.checked ? selectedCards : unselectedCards).push(card);
         });
         if (selectedCards.length === 0) { toast('请先选择要保留的图片', 'error'); return; }
-        preConfirmSnapshot = { allImages: [...allImages], displayedImages: [...displayedImages], currentIndex, galleryHTML: gallery.innerHTML };
+        preConfirmSnapshot = { allImages: [...allImages], displayedImages: [...displayedImages], currentIndex, galleryHTML: gallery.innerHTML, prevConfirmed: [...p1ConfirmedImages] };
         unselectedCards.forEach(card => card.remove());
         const keptSrcs = new Set(selectedCards.map(c => c.dataset.src));
         displayedImages = displayedImages.filter(d => keptSrcs.has(d.src));
@@ -1142,20 +1176,25 @@
             const cb = card.querySelector('.card-checkbox');
             if (cb) { cb.checked = false; card.classList.remove('selected'); }
         });
-        // 标记为已确认
+        // 标记为已确认，将新选中的图片追加到已确认列表（去重）
         isConfirmed = true;
-        p1ConfirmedImages = allImages.slice();
+        const existingSrcs = new Set(p1ConfirmedImages.map(i => i.src));
+        for (const img of allImages) {
+            if (!existingSrcs.has(img.src)) {
+                p1ConfirmedImages.push(img);
+            }
+        }
         // 更新 UI
         totalCount.textContent = allImages.length;
         showCount.textContent = allImages.length;
         updateSelectedInfo();
         loadMoreBar.classList.remove('visible');
         confirmedBar.classList.add('visible');
-        confirmedCount.textContent = allImages.length;
+        confirmedCount.textContent = p1ConfirmedImages.length;
         nextPageBar.classList.add('visible');
         // 更新步骤导航
         stepBtns.forEach(b => { if (+b.dataset.page === 2) b.classList.remove('disabled'); });
-        toast(`已确认保留 ${allImages.length} 张图片`, 'success');
+        toast(`已确认保留 ${allImages.length} 张图片（共 ${p1ConfirmedImages.length} 张）`, 'success');
         // 保存到 IndexedDB
         saveAppState();
     }
@@ -1167,15 +1206,23 @@
         currentIndex = preConfirmSnapshot.currentIndex;
         gallery.innerHTML = preConfirmSnapshot.galleryHTML;
         rebindCardEvents();
-        isConfirmed = false;
-        p1ConfirmedImages = [];
+        // 恢复到上一次的确认状态
+        p1ConfirmedImages = preConfirmSnapshot.prevConfirmed || [];
+        isConfirmed = p1ConfirmedImages.length > 0;
         totalCount.textContent = allImages.length;
         showCount.textContent = gallery.querySelectorAll('.card').length;
         updateSelectedInfo();
         loadMoreBar.classList.toggle('visible', currentIndex < allImages.length);
-        confirmedBar.classList.remove('visible');
-        nextPageBar.classList.remove('visible');
-        stepBtns.forEach(b => { if (+b.dataset.page === 2) b.classList.add('disabled'); });
+        if (p1ConfirmedImages.length > 0) {
+            confirmedBar.classList.add('visible');
+            confirmedCount.textContent = p1ConfirmedImages.length;
+            nextPageBar.classList.add('visible');
+            stepBtns.forEach(b => { if (+b.dataset.page === 2) b.classList.remove('disabled'); });
+        } else {
+            confirmedBar.classList.remove('visible');
+            nextPageBar.classList.remove('visible');
+            stepBtns.forEach(b => { if (+b.dataset.page === 2) b.classList.add('disabled'); });
+        }
         preConfirmSnapshot = null;
         saveAppState();
         toast('已撤销确认，恢复到之前的状态', 'success');
@@ -1727,6 +1774,49 @@
     }
 
     // 并发生成全部
+    // 失败重新生成
+    const genRetryFailedBtn = document.getElementById('genRetryFailedBtn');
+    genRetryFailedBtn.addEventListener('click', async () => {
+        const apiKey = getApiKey();
+        if (!apiKey) { toast('请先设置 API Key', 'error'); return; }
+        const failedIndices = [];
+        genItems.forEach((item, idx) => {
+            if (item.status === 'error') {
+                item.status = 'pending'; item.error = null; item.taskId = null;
+                item.resultUrl = null; item.resultB64 = null;
+                refreshGenCard(idx);
+                failedIndices.push(idx);
+            }
+        });
+        if (failedIndices.length === 0) { toast('没有失败的项目', 'error'); return; }
+        isGenerating = true;
+        genRetryFailedBtn.disabled = true;
+        genAllBtn.disabled = true;
+        genRetryFailedBtn.textContent = '重试中...';
+        genProgress.classList.add('visible');
+        updateProgress();
+        let cursor = 0;
+        async function runNext() {
+            while (cursor < failedIndices.length) {
+                const idx = failedIndices[cursor++];
+                await generateOne(idx, apiKey);
+                updateProgress();
+            }
+        }
+        const workers = [];
+        for (let i = 0; i < Math.min(CONCURRENCY, failedIndices.length); i++) {
+            workers.push(runNext());
+        }
+        await Promise.all(workers);
+        isGenerating = false;
+        genRetryFailedBtn.disabled = false;
+        genAllBtn.disabled = false;
+        genRetryFailedBtn.textContent = '失败重新生成';
+        toast('失败项重新生成完成', 'success');
+        updateGenInfo();
+        saveAppState();
+    });
+
     genAllBtn.addEventListener('click', async () => {
         const apiKey = getApiKey();
         if (!apiKey) { toast('请先设置 API Key', 'error'); return; }
