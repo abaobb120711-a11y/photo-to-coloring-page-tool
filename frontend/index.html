@@ -687,6 +687,7 @@
 
     <div style="text-align:center;margin-top:24px;padding-bottom:40px" id="renameDownloadBar">
         <button class="btn-next-page" id="downloadRenamedBtn" style="display:none">下载打包 ZIP</button>
+        <button class="btn-delete-sel" id="clearAndRestartBtn" style="margin-left:12px;background:#ff4d4f;color:#fff;padding:10px 24px;border-radius:8px;font-size:15px;cursor:pointer;border:none">清空数据，开始新主题</button>
     </div>
 </div>
 </div>
@@ -757,6 +758,15 @@
         requestAnimationFrame(() => el.classList.add('show'));
         setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 3000);
     }
+
+    /* ═══════════════ 多标签页隔离 ═══════════════ */
+    // 每个标签页生成唯一 sessionId，IndexedDB 键名用 sessionId 前缀
+    let SESSION_ID = sessionStorage.getItem('tab_session_id');
+    if (!SESSION_ID) {
+        SESSION_ID = 'tab_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+        sessionStorage.setItem('tab_session_id', SESSION_ID);
+    }
+    function sKey(key) { return SESSION_ID + ':' + key; }
 
     /* ═══════════════ IndexedDB 持久化 ═══════════════ */
     const DB_NAME = 'ColoringToolDB';
@@ -836,34 +846,65 @@
             }
             imgs.push({ src: img.src, alt: img.alt, _b64: b64 });
         }
-        await dbPut('state', 'confirmedImages', imgs);
-        await dbPut('state', 'currentPage', currentPage);
-        await dbPut('state', 'isConfirmed', isConfirmed);
-        // 保存第二页生成结果
-        if (genItems.length > 0) {
-            const genData = genItems.map(g => ({
-                src: g.src, alt: g.alt, _b64: g._b64 || null,
-                resultUrl: g.resultUrl || null, resultB64: g.resultB64 || null,
-                status: g.status, error: g.error || null, taskId: g.taskId || null
-            }));
-            await dbPut('state', 'genItems', genData);
-        }
+        await dbPut('state', sKey('confirmedImages'), imgs);
+        await dbPut('state', sKey('currentPage'), currentPage);
+        await dbPut('state', sKey('isConfirmed'), isConfirmed);
+        // 保存第二页生成结果（即使为空也保存，确保删除生效）
+        const genData = genItems.map(g => ({
+            src: g.src, alt: g.alt, _b64: g._b64 || null,
+            resultUrl: g.resultUrl || null, resultB64: g.resultB64 || null,
+            status: g.status, error: g.error || null, taskId: g.taskId || null
+        }));
+        await dbPut('state', sKey('genItems'), genData);
     }
 
     async function loadAppState() {
         if (!db) return;
-        const saved = await dbGet('state', 'confirmedImages');
-        const page = await dbGet('state', 'currentPage');
-        const confirmed = await dbGet('state', 'isConfirmed');
-        const savedGen = await dbGet('state', 'genItems');
+        const saved = await dbGet('state', sKey('confirmedImages'));
+        const page = await dbGet('state', sKey('currentPage'));
+        const confirmed = await dbGet('state', sKey('isConfirmed'));
+        const savedGen = await dbGet('state', sKey('genItems'));
         if (saved && saved.length > 0) {
             p1ConfirmedImages = saved;
             isConfirmed = confirmed || false;
         }
         if (savedGen && savedGen.length > 0) {
             genItems = savedGen;
+            genPage2Initialized = true;
         }
         if (page) currentPage = page;
+    }
+
+    // 清空当前标签页的所有持久化数据和内存状态（用于完成一个主题后重新开始）
+    async function clearAllState() {
+        if (!db) return;
+        await dbDelete('state', sKey('confirmedImages'));
+        await dbDelete('state', sKey('currentPage'));
+        await dbDelete('state', sKey('isConfirmed'));
+        await dbDelete('state', sKey('genItems'));
+        await dbDelete('state', sKey('renameItems'));
+        // 重置内存状态
+        p1ConfirmedImages = [];
+        isConfirmed = false;
+        allImages = []; displayedImages = []; currentIndex = 0;
+        genItems = [];
+        renameItems = [];
+        genPage2Initialized = false;
+        currentPage = 1;
+        // 重置 UI
+        gallery.innerHTML = '';
+        toolbar.classList.remove('visible');
+        confirmedBar.classList.remove('visible');
+        nextPageBar.classList.remove('visible');
+        loadMoreBar.classList.remove('visible');
+        totalCount.textContent = '0';
+        showCount.textContent = '0';
+        confirmedCount.textContent = '0';
+        urlInput.value = '';
+        stepBtns.forEach(b => {
+            if (+b.dataset.page === 2) b.classList.add('disabled');
+            if (+b.dataset.page === 3) b.classList.add('disabled');
+        });
     }
 
     /* ═══════════════ 页面导航 ═══════════════ */
@@ -1459,16 +1500,19 @@
         return k;
     }
 
+    let genPage2Initialized = false;  // 标记第二页是否已初始化过
+
     function initPage2() {
-        // 同步：将 p1ConfirmedImages 中新增的图片追加到 genItems
-        if (p1ConfirmedImages.length > 0) {
+        // 仅在首次进入第二页时，从 p1ConfirmedImages 初始化 genItems
+        // 之后 genItems 是独立的数据源，删除操作不会被覆盖
+        if (!genPage2Initialized && p1ConfirmedImages.length > 0) {
             if (genItems.length === 0) {
                 genItems = p1ConfirmedImages.map(img => ({
                     src: img.src, alt: img.alt, _b64: img._b64 || null,
                     status: 'pending', taskId: null, resultUrl: null, resultB64: null, error: null
                 }));
             } else {
-                // 找出已有的 src 集合
+                // 找出已有的 src 集合（包含从 DB 恢复的）
                 const existingSrcs = new Set(genItems.map(g => g.src));
                 for (const img of p1ConfirmedImages) {
                     if (!existingSrcs.has(img.src)) {
@@ -1479,6 +1523,21 @@
                     }
                 }
             }
+            genPage2Initialized = true;
+        } else if (genPage2Initialized && p1ConfirmedImages.length > 0) {
+            // 后续进入：只添加全新的（不在 genItems 中的）确认图片
+            const existingSrcs = new Set(genItems.map(g => g.src));
+            let added = 0;
+            for (const img of p1ConfirmedImages) {
+                if (!existingSrcs.has(img.src)) {
+                    genItems.push({
+                        src: img.src, alt: img.alt, _b64: img._b64 || null,
+                        status: 'pending', taskId: null, resultUrl: null, resultB64: null, error: null
+                    });
+                    added++;
+                }
+            }
+            if (added > 0) toast(`新增 ${added} 张图片到生成列表`, 'success');
         }
         renderGenGallery();
         updateGenInfo();
@@ -2070,7 +2129,7 @@
             renderRenameCards();
             updateRenameToolbar();
             downloadRenamedBtn.style.display = 'inline-block';
-            await dbPut('state', 'renameItems', renameItems.map(r => ({
+            await dbPut('state', sKey('renameItems'), renameItems.map(r => ({
                 oldName: r.oldName, newName: r.newName, imgB64: r.imgB64
             })));
             toast('AI 重命名完成！可编辑后下载', 'success');
@@ -2107,12 +2166,30 @@
             document.body.appendChild(a); a.click(); a.remove();
             URL.revokeObjectURL(a.href);
             toast('下载完成！', 'success');
+            // 下载完成后提示是否清空数据开始新主题
+            setTimeout(() => {
+                if (confirm('下载完成！是否清空当前数据，开始新的主题？\n\n点击「确定」清空所有数据回到首页\n点击「取消」保留当前数据')) {
+                    clearAllState();
+                    showPage(1);
+                    showHome();
+                    toast('已清空数据，可以开始新主题', 'success');
+                }
+            }, 500);
         } catch (e) {
             toast('下载失败: ' + e.message, 'error');
         } finally {
             downloadRenamedBtn.disabled = false;
             downloadRenamedBtn.textContent = '下载打包 ZIP';
         }
+    });
+
+    // 清空数据，开始新主题
+    document.getElementById('clearAndRestartBtn').addEventListener('click', () => {
+        if (!confirm('确定要清空所有数据吗？\n\n这将清除当前标签页的抓取图片、生成结果和重命名数据。\n请确保已下载需要的文件。')) return;
+        clearAllState();
+        showPage(1);
+        showHome();
+        toast('已清空数据，可以开始新主题', 'success');
     });
 
     /* ═══════════════ 德语翻译工具 ═══════════════ */
@@ -2204,81 +2281,5 @@
             const ta = document.createElement('textarea');
             ta.value = text;
             document.body.appendChild(ta);
-            ta.select();
-            document.execCommand('copy');
-            ta.remove();
-            toast('德文结果已复制到剪贴板', 'success');
-        });
-    });
 
-    // 清空
-    deClearBtn.addEventListener('click', () => {
-        deInputArea.value = '';
-        deResultSection.style.display = 'none';
-        deCopyBtn.style.display = 'none';
-        lastResultLines = [];
-    });
-
-    /* ═══════════════ 首页工具导航 ═══════════════ */
-    let currentTool = null;
-    const homeHeader = document.getElementById('homeHeader');
-    const homePage = document.getElementById('homePage');
-    const coloringTool = document.getElementById('coloringTool');
-    const germanTool = document.getElementById('germanTool');
-
-    function showHome() {
-        currentTool = null;
-        homeHeader.style.display = '';
-        homePage.style.display = '';
-        coloringTool.style.display = 'none';
-        germanTool.style.display = 'none';
-    }
-
-    function showTool(name) {
-        currentTool = name;
-        homeHeader.style.display = 'none';
-        homePage.style.display = 'none';
-        coloringTool.style.display = name === 'coloring' ? '' : 'none';
-        germanTool.style.display = name === 'german' ? '' : 'none';
-        if (name === 'coloring') showPage(currentPage);
-        if (name === 'german' && Object.keys(fullDict).length === 0) loadDict();
-    }
-
-    document.querySelectorAll('.tool-card').forEach(card => {
-        card.addEventListener('click', () => showTool(card.dataset.tool));
-    });
-    document.getElementById('coloringBackBtn').addEventListener('click', showHome);
-    document.getElementById('germanBackBtn').addEventListener('click', showHome);
-
-    /* ═══════════════ 初始化 ═══════════════ */
-    openDB().then(async () => {
-        await loadAppState();
-        // 恢复重命名数据
-        const savedRename = await dbGet('state', 'renameItems');
-        if (savedRename && savedRename.length > 0) {
-            renameItems = savedRename;
-        }
-        // 恢复第一页已确认状态
-        if (isConfirmed && p1ConfirmedImages.length > 0) {
-            allImages = p1ConfirmedImages.slice();
-            displayedImages = allImages.slice();
-            currentIndex = allImages.length;
-            toolbar.classList.remove('visible');
-            confirmedBar.classList.add('visible');
-            confirmedCount.textContent = allImages.length;
-            totalCount.textContent = allImages.length;
-            nextPageBar.classList.add('visible');
-            // 渲染卡片
-            gallery.innerHTML = '';
-            allImages.forEach(img => gallery.appendChild(createCard(img)));
-            showCount.textContent = allImages.length;
-        }
-        showHome();
-    }).catch(() => {
-        showHome();
-    });
-})();
-</script>
-</body>
-</html>
 
