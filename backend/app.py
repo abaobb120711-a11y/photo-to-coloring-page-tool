@@ -181,8 +181,23 @@ def _try_mediawiki_api(url: str) -> list[dict] | None:
         return None
     page_name = wiki_match.group(1)
 
-    # 构建 API URL
-    api_base = f"{parsed.scheme}://{parsed.netloc}/api.php"
+    # 构建 API URL：Wikipedia/Wikimedia 用 /w/api.php，Fandom 用 /api.php
+    _wmf = any(d in host for d in ['wikipedia.org', 'wikimedia.org'])
+    api_paths = ['/w/api.php', '/api.php'] if _wmf else ['/api.php', '/w/api.php']
+    api_base = None
+    for ap in api_paths:
+        test_url = f"{parsed.scheme}://{parsed.netloc}{ap}"
+        try:
+            tr = _session.get(test_url, params={'action': 'query', 'meta': 'siteinfo',
+                              'format': 'json'}, timeout=10)
+            if tr.status_code == 200 and 'query' in tr.text[:500]:
+                api_base = test_url
+                break
+        except Exception:
+            continue
+    if not api_base:
+        return None
+
     try:
         resp = _session.get(api_base, params={
             'action': 'parse', 'page': page_name,
@@ -190,12 +205,11 @@ def _try_mediawiki_api(url: str) -> list[dict] | None:
         }, timeout=20)
         resp.raise_for_status()
         data = resp.json()
-        if 'parse' not in data or 'text' not in data['parse']:
-            return None
-        html = data['parse']['text']['*']
-        images = _extract_images_from_html(html, url)
-        if images:
-            return images
+        if 'parse' in data and 'text' in data['parse']:
+            html = data['parse']['text']['*']
+            images = _extract_images_from_html(html, url)
+            if images:
+                return images
     except Exception:
         pass
 
@@ -358,6 +372,9 @@ def _extract_images_from_html(html: str, url: str) -> list[dict]:
             return
         if src.startswith('data:') and len(src) < 300:
             return
+        # 过滤掉 wiki 文件页面 URL（如 /wiki/File:XXX.jpg），这些是 HTML 页面，不是直接图片
+        if re.search(r'/wiki/(File|Special|Image):', src, re.I):
+            return
         src = clean_image_url(src)
         if src in seen:
             return
@@ -454,7 +471,21 @@ def scrape():
     if not url:
         return jsonify({'error': 'URL 为空'}), 400
 
-    # 先用 requests 快速抓取
+    # 对于 wiki 类站点，优先用 MediaWiki API 获取图片直链
+    parsed_url = urlparse(url)
+    _host = parsed_url.netloc.lower()
+    _is_wiki_site = any(d in _host for d in [
+        'fandom.com', 'wikia.com', 'wikia.org',
+        'wikipedia.org', 'wikimedia.org',
+        'fextralife.com', 'wiki.gg'
+    ]) or '/wiki/' in parsed_url.path
+
+    if _is_wiki_site:
+        wiki_images = _try_mediawiki_api(url)
+        if wiki_images:
+            return jsonify(wiki_images)
+
+    # 用 requests 快速抓取
     html = None
     try:
         r = _session.get(url, timeout=15, allow_redirects=True)
@@ -469,10 +500,11 @@ def scrape():
         if images:
             return jsonify(images)
 
-    # requests 没拿到图片 → 尝试 MediaWiki API（Fandom/Wikia 等）
-    wiki_images = _try_mediawiki_api(url)
-    if wiki_images:
-        return jsonify(wiki_images)
+    # 非 wiki 站点也尝试 MediaWiki API 作为 fallback
+    if not _is_wiki_site:
+        wiki_images = _try_mediawiki_api(url)
+        if wiki_images:
+            return jsonify(wiki_images)
 
     # 最后用 Playwright 重试
     try:
@@ -874,6 +906,7 @@ if __name__ == '__main__':
     print(f'\n[OK] 后端已启动: http://0.0.0.0:{port}')
     print('[提示] 如遇 Cloudflare 保护网站，将自动启动浏览器引擎处理\n')
     app.run(host='0.0.0.0', debug=False, port=port)
+
 
 
 
