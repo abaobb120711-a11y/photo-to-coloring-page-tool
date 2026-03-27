@@ -301,11 +301,18 @@ def _is_cloudflare_page(html: str) -> bool:
 
 
 def clean_image_url(url: str) -> str:
-    """清理 Fandom/Wikia 等网站的缩略图 URL，获取高清原图。"""
+    """清理图片 URL，去除缩略图参数、追踪参数等，获取高清原图。"""
+    # Fandom / Wikia 缩略图参数
     url = re.sub(r'/revision/latest/scale-to-width-down/\d+', '/revision/latest', url)
     url = re.sub(r'/revision/latest/smart-width/\d+', '/revision/latest', url)
     url = re.sub(r'\?cb=\d+&(path-prefix=[^&]+&)?width=\d+.*$', '', url)
     url = re.sub(r'\?width=\d+.*$', '', url)
+    # 去除常见追踪/缓存参数（cb, v, t, timestamp, _等）
+    url = re.sub(r'[?&](cb|v|t|timestamp|_|nc|bust|cache|ver|version)=[^&]*', '', url)
+    # 如果 ? 后面什么都没有了，去掉 ?
+    url = re.sub(r'\?$', '', url)
+    # 去除 URL 片段
+    url = url.split('#')[0]
     return url
 
 
@@ -378,7 +385,12 @@ def _extract_images_from_html(html: str, url: str) -> list[dict]:
         src = clean_image_url(src)
         if src in seen:
             return
+        # 也用纯路径（不含 query）作为去重键，避免同一图片不同参数重复
+        base_key = src.split('?')[0]
+        if base_key in seen:
+            return
         seen.add(src)
+        seen.add(base_key)
         alt = (alt or '').replace('_', ' ').strip()
         # 如果没有 alt，从 URL 文件名生成
         if not alt:
@@ -460,6 +472,53 @@ def _extract_images_from_html(html: str, url: str) -> list[dict]:
     return images
 
 
+# ── 从页面中提取分页链接 ──────────────────────────────────────────
+def _extract_pagination_links(html: str, base_url: str) -> list[str]:
+    """从 HTML 中提取分页链接（下一页、第2/3/4页等）。"""
+    soup = BeautifulSoup(html, 'html.parser')
+    parsed = urlparse(base_url)
+    links = []
+    seen_urls = {base_url}
+
+    def make_abs(href):
+        if not href:
+            return None
+        if href.startswith('//'):
+            return 'https:' + href
+        if href.startswith('/'):
+            return f"{parsed.scheme}://{parsed.netloc}{href}"
+        if not href.startswith('http'):
+            return urljoin(base_url, href)
+        return href
+
+    # 查找包含分页相关的链接
+    pagination_selectors = [
+        'a.next', 'a.pagination-next', 'a[rel="next"]',
+        '.pagination a', '.pager a', '.page-numbers a',
+        'nav a', '.nav-links a', '.paginator a',
+        '.category-page__pagination a',          # Fandom 分类页
+        '.category-page__pagination-next a',     # Fandom 下一页
+    ]
+    for sel in pagination_selectors:
+        for a in soup.select(sel):
+            href = a.get('href')
+            full = make_abs(href)
+            if full and full not in seen_urls and parsed.netloc in (urlparse(full).netloc):
+                seen_urls.add(full)
+                links.append(full)
+
+    # 也查找文字为"下一页"/"Next"/">"的链接
+    for a in soup.find_all('a', href=True):
+        text = (a.get_text(strip=True) or '').lower()
+        if text in ('next', '下一页', '下一页 »', '下一页 ›', '›', '»', '>', '>>', 'next →', 'next page', '次のページ'):
+            full = make_abs(a['href'])
+            if full and full not in seen_urls and parsed.netloc in (urlparse(full).netloc):
+                seen_urls.add(full)
+                links.append(full)
+
+    return links
+
+
 # ── /scrape ──────────────────────────────────────────────────────
 @app.route('/scrape', methods=['POST', 'OPTIONS'])
 def scrape():
@@ -468,6 +527,9 @@ def scrape():
 
     data = request.get_json(silent=True) or {}
     url = (data.get('url') or '').strip()
+    deep = data.get('deep', False)    # 是否自动爬取分页
+    max_pages = min(int(data.get('maxPages', 10)), 50)  # 最多爬多少页
+
     if not url:
         return jsonify({'error': 'URL 为空'}), 400
 
@@ -497,6 +559,36 @@ def scrape():
 
     if html:
         images = _extract_images_from_html(html, url)
+        # 深度抓取：自动跟踪分页链接
+        if deep and images:
+            visited = {url}
+            next_links = _extract_pagination_links(html, url)
+            page_num = 1
+            while next_links and page_num < max_pages:
+                next_url = next_links.pop(0)
+                if next_url in visited:
+                    continue
+                visited.add(next_url)
+                page_num += 1
+                try:
+                    r2 = _session.get(next_url, timeout=15, allow_redirects=True)
+                    r2.raise_for_status()
+                    if 'just a moment' in r2.text[:2000].lower():
+                        break
+                    page_images = _extract_images_from_html(r2.text, next_url)
+                    # 全局去重
+                    existing = {img['src'] for img in images}
+                    for img in page_images:
+                        if img['src'] not in existing:
+                            images.append(img)
+                            existing.add(img['src'])
+                    # 继续查找下一页
+                    more_links = _extract_pagination_links(r2.text, next_url)
+                    for link in more_links:
+                        if link not in visited:
+                            next_links.append(link)
+                except Exception:
+                    break
         if images:
             return jsonify(images)
 
