@@ -2273,6 +2273,90 @@ window.onerror = function(msg, src, line, col, err) {
         navigator.clipboard.writeText(text).then(() => {
             toast('德文结果已复制到剪贴板', 'success');
         }).catch(() => {
+            // fallback
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            ta.remove();
+            toast('德文结果已复制到剪贴板', 'success');
+        });
+    });
+
+    // 清空
+    deClearBtn.addEventListener('click', () => {
+        deInputArea.value = '';
+        deResultSection.style.display = 'none';
+        deCopyBtn.style.display = 'none';
+        lastResultLines = [];
+    });
+
+    /* ═══════════════ 首页工具导航 ═══════════════ */
+    let currentTool = null;
+    const homeHeader = document.getElementById('homeHeader');
+    const homePage = document.getElementById('homePage');
+    const coloringTool = document.getElementById('coloringTool');
+    const germanTool = document.getElementById('germanTool');
+
+    function showHome() {
+        currentTool = null;
+        homeHeader.style.display = '';
+        homePage.style.display = '';
+        coloringTool.style.display = 'none';
+        germanTool.style.display = 'none';
+    }
+
+    function showTool(name) {
+        currentTool = name;
+        homeHeader.style.display = 'none';
+        homePage.style.display = 'none';
+        coloringTool.style.display = name === 'coloring' ? '' : 'none';
+        germanTool.style.display = name === 'german' ? '' : 'none';
+        if (name === 'coloring') showPage(currentPage);
+        if (name === 'german' && Object.keys(fullDict).length === 0) loadDict();
+    }
+
+    document.querySelectorAll('.tool-card').forEach(card => {
+        card.addEventListener('click', () => {
+            try { showTool(card.dataset.tool); }
+            catch(e) { alert('点击出错: ' + e.message + '\n' + e.stack); console.error(e); }
+        });
+    });
+    document.getElementById('coloringBackBtn').addEventListener('click', showHome);
+    document.getElementById('germanBackBtn').addEventListener('click', showHome);
+
+    /* ═══════════════ 初始化 ═══════════════ */
+    openDB().then(async () => {
+        await loadAppState();
+        // 恢复重命名数据
+        const savedRename = await dbGet('state', 'renameItems');
+        if (savedRename && savedRename.length > 0) {
+            renameItems = savedRename;
+        }
+        // 恢复第一页已确认状态
+        if (isConfirmed && p1ConfirmedImages.length > 0) {
+            allImages = p1ConfirmedImages.slice();
+            displayedImages = allImages.slice();
+            currentIndex = allImages.length;
+            toolbar.classList.remove('visible');
+            confirmedBar.classList.add('visible');
+            confirmedCount.textContent = allImages.length;
+            totalCount.textContent = allImages.length;
+            nextPageBar.classList.add('visible');
+            // 渲染卡片
+            gallery.innerHTML = '';
+            allImages.forEach(img => gallery.appendChild(createCard(img)));
+            showCount.textContent = allImages.length;
+        }
+        showHome();
+    }).catch(() => {
+        showHome();
+    });
+})();
+</script>
+</body>
+</html>
 
 
 
