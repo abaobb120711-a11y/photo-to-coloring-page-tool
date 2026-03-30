@@ -738,6 +738,10 @@
 <input type="file" id="fileInput" multiple accept="image/*" style="display:none" />
 
 <script>
+window.onerror = function(msg, src, line, col, err) {
+    document.title = '❌ JS错误: ' + msg;
+    console.error('全局错误:', msg, 'line:', line);
+};
 (() => {
     /* ═══════════════ 公共工具 ═══════════════ */
     // ▼▼▼ 部署配置：修改此处指向您的后端地址 ▼▼▼
@@ -2269,10 +2273,7 @@
         navigator.clipboard.writeText(text).then(() => {
             toast('德文结果已复制到剪贴板', 'success');
         }).catch(() => {
-            // fallback
-            const ta = document.createElement('textarea');
-            ta.value = text;
-            document.body.appendChild(ta);
+
 
 
 
