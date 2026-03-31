@@ -1697,8 +1697,12 @@ window.onerror = function(msg, src, line, col, err) {
         } else if (item.status === 'generating' || item.status === 'polling') {
             const statusDiv = document.createElement('div');
             statusDiv.className = 'gen-status';
-            statusDiv.innerHTML = '<span class="spinner"></span><span class="status-text">' +
-                (item.status === 'generating' ? '提交中...' : '生成中...') + '</span>';
+            let statusMsg = item.status === 'generating' ? '提交中...' : '生成中...';
+            if (item.status === 'polling' && item.progress != null) {
+                statusMsg = '生成中 ' + item.progress + '%';
+                if (item.estimatedTime) statusMsg += ' (预计' + item.estimatedTime + '秒)';
+            }
+            statusDiv.innerHTML = '<span class="spinner"></span><span class="status-text">' + statusMsg + '</span>';
             rightSide.appendChild(rightLabel);
             rightSide.appendChild(statusDiv);
         } else if (item.status === 'error') {
@@ -1839,7 +1843,12 @@ window.onerror = function(msg, src, line, col, err) {
                 const status = ((data.status || data.data?.status || data.data?.data?.status || '')).toLowerCase();
                 // 合并所有可能的数据层
                 const taskData = data.data?.result || data.data?.output || data.data || data.result || data.output || data;
-                console.log('[pollTask] parsed status:', status, 'taskData keys:', Object.keys(taskData));
+                console.log('[pollTask] parsed status:', status, 'progress:', data.progress, 'estimated_time:', data.estimated_time, 'taskData keys:', Object.keys(taskData));
+
+                // 更新进度信息到 UI
+                if (data.progress != null) { item.progress = data.progress; }
+                if (data.estimated_time != null) { item.estimatedTime = data.estimated_time; }
+                if (data.progress != null || data.estimated_time != null) { refreshGenCard(idx); }
 
                 if (status === 'completed' || status === 'success' || status === 'succeeded' || status === 'finished' || status === 'done') {
                     // 兼容多种 API 返回格式提取图片 URL
