@@ -808,6 +808,15 @@ window.onerror = function(msg, src, line, col, err) {
         });
     }
 
+    function dbGetAllKeys(store) {
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(store, 'readonly');
+            const req = tx.objectStore(store).getAllKeys();
+            req.onsuccess = () => resolve(req.result || []);
+            req.onerror = e => reject(e);
+        });
+    }
+
     function dbDelete(store, key) {
         return new Promise((resolve, reject) => {
             const tx = db.transaction(store, 'readwrite');
@@ -868,6 +877,52 @@ window.onerror = function(msg, src, line, col, err) {
         let page = await dbGet('state', sKey('currentPage'));
         let confirmed = await dbGet('state', sKey('isConfirmed'));
         let savedGen = await dbGet('state', sKey('genItems'));
+
+        // 刷新后若 sessionStorage 意外丢失 tab id，则回退到最近一次会话数据
+        if (!saved && !savedGen) {
+            try {
+                const keys = await dbGetAllKeys('state');
+                const sessionPrefixes = new Set();
+                keys.forEach(k => {
+                    if (typeof k !== 'string') return;
+                    if (!k.includes(':')) return;
+                    const pos = k.indexOf(':');
+                    sessionPrefixes.add(k.slice(0, pos));
+                });
+
+                if (sessionPrefixes.size > 0) {
+                    const sorted = Array.from(sessionPrefixes).sort((a, b) => {
+                        const ta = parseInt(String(a).split('_')[0], 10) || 0;
+                        const tb = parseInt(String(b).split('_')[0], 10) || 0;
+                        return tb - ta;
+                    });
+                    const latest = sorted[0];
+
+                    const fallbackSaved = await dbGet('state', latest + ':confirmedImages');
+                    const fallbackPage = await dbGet('state', latest + ':currentPage');
+                    const fallbackConfirmed = await dbGet('state', latest + ':isConfirmed');
+                    const fallbackGen = await dbGet('state', latest + ':genItems');
+                    const fallbackRename = await dbGet('state', latest + ':renameItems');
+
+                    if (fallbackSaved || fallbackGen || fallbackRename) {
+                        saved = fallbackSaved;
+                        page = fallbackPage;
+                        confirmed = fallbackConfirmed;
+                        savedGen = fallbackGen;
+
+                        await dbPut('state', sKey('confirmedImages'), fallbackSaved || []);
+                        await dbPut('state', sKey('currentPage'), fallbackPage || 1);
+                        await dbPut('state', sKey('isConfirmed'), !!fallbackConfirmed);
+                        await dbPut('state', sKey('genItems'), fallbackGen || []);
+                        if (fallbackRename) {
+                            await dbPut('state', sKey('renameItems'), fallbackRename);
+                        }
+                    }
+                }
+            } catch {
+                // 回退恢复失败时，保持空状态即可
+            }
+        }
 
         if (saved && saved.length > 0) {
             p1ConfirmedImages = saved;
@@ -2366,6 +2421,7 @@ window.onerror = function(msg, src, line, col, err) {
 </script>
 </body>
 </html>
+
 
 
 
