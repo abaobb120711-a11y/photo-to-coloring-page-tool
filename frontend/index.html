@@ -773,8 +773,11 @@ window.onerror = function(msg, src, line, col, err) {
             const req = indexedDB.open(DB_NAME, DB_VER);
             req.onupgradeneeded = e => {
                 const d = e.target.result;
-                if (!d.objectStoreNames.contains('state')) d.createObjectStore('state');
-                if (!d.objectStoreNames.contains('blobs')) d.createObjectStore('blobs');
+                // 版本升级时清空所有旧数据，重新建表
+                if (d.objectStoreNames.contains('state')) d.deleteObjectStore('state');
+                if (d.objectStoreNames.contains('blobs')) d.deleteObjectStore('blobs');
+                d.createObjectStore('state');
+                d.createObjectStore('blobs');
             };
             req.onsuccess = e => { db = e.target.result; resolve(db); };
             req.onerror = e => reject(e);
