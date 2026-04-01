@@ -734,21 +734,61 @@ def api_generate():
         try:
             r = do_request(image_src, timeout=30)
             img_bytes = r.content
-            ct = r.headers.get('Content-Type', 'image/png').split(';')[0].strip()
-            if ct == 'application/octet-stream':
-                ct = 'image/png'
-            b64 = base64.b64encode(img_bytes).decode('utf-8')
-            image_data = f"data:{ct};base64,{b64}"
         except Exception as e:
             return jsonify({'error': f'下载图片失败: {e}'}), 500
     else:
-        image_data = image_src  # 已经是 base64 data URI
-        # 从 data URI 解码出原始字节以检测尺寸
+        # 已经是 base64 data URI
         try:
-            header, b64_str = image_data.split(',', 1)
+            header, b64_str = image_src.split(',', 1)
             img_bytes = base64.b64decode(b64_str)
         except Exception:
-            pass
+            return jsonify({'error': '无法解析图片数据'}), 400
+
+    # ── 压缩 / 缩放图片，防止 base64 过大导致 API 失败 ──
+    MAX_DIMENSION = 1024  # 最长边不超过 1024px
+    MAX_BYTES = 1 * 1024 * 1024  # 压缩后不超过 1MB
+    try:
+        pil_img = PILImage.open(io.BytesIO(img_bytes))
+        orig_w, orig_h = pil_img.size
+        print(f'[generate] 原始图片尺寸: {orig_w}x{orig_h}, 原始大小: {len(img_bytes)} bytes', flush=True)
+
+        # 如果有 alpha 通道，转为 RGB（JPEG 不支持透明）
+        if pil_img.mode in ('RGBA', 'LA', 'P'):
+            background = PILImage.new('RGB', pil_img.size, (255, 255, 255))
+            if pil_img.mode == 'P':
+                pil_img = pil_img.convert('RGBA')
+            background.paste(pil_img, mask=pil_img.split()[-1] if pil_img.mode == 'RGBA' else None)
+            pil_img = background
+
+        if pil_img.mode != 'RGB':
+            pil_img = pil_img.convert('RGB')
+
+        # 按最长边缩放
+        if max(orig_w, orig_h) > MAX_DIMENSION:
+            ratio = MAX_DIMENSION / max(orig_w, orig_h)
+            new_w = int(orig_w * ratio)
+            new_h = int(orig_h * ratio)
+            pil_img = pil_img.resize((new_w, new_h), PILImage.LANCZOS)
+            print(f'[generate] 缩放至: {new_w}x{new_h}', flush=True)
+
+        # 压缩为 JPEG，质量逐步降低直到低于 MAX_BYTES
+        quality = 85
+        while quality >= 30:
+            buf = io.BytesIO()
+            pil_img.save(buf, format='JPEG', quality=quality)
+            compressed = buf.getvalue()
+            if len(compressed) <= MAX_BYTES:
+                break
+            quality -= 10
+
+        img_bytes = compressed
+        print(f'[generate] 压缩后大小: {len(img_bytes)} bytes, quality={quality}', flush=True)
+    except Exception as e:
+        print(f'[generate] 图片压缩警告（使用原图）: {e}', flush=True)
+
+    # 构建最终 data URI
+    b64 = base64.b64encode(img_bytes).decode('utf-8')
+    image_data = f"data:image/jpeg;base64,{b64}"
 
     # 固定输出比例为 2:3（1365×2048）
     size = '2:3'
@@ -991,6 +1031,46 @@ def api_translate():
         'matched': matched,
         'unmatched': sorted(unmatched_set),
     })
+
+
+# ══════════════════════════════════════════════════════════════
+# SEO 文案生成 / 重写  —  代理到 Cloudflare Worker
+# ══════════════════════════════════════════════════════════════
+SEO_WORKER_URL = 'https://seo-writer-v2.ne0s0u1-pd.workers.dev'
+
+@app.route('/api/seo/generate', methods=['POST', 'OPTIONS'])
+def seo_generate():
+    """代理前端的 SEO 生成请求到 Worker"""
+    if request.method == 'OPTIONS':
+        return '', 204
+    data = request.get_json(force=True)
+    if not data or not data.get('apiKey'):
+        return jsonify({'error': '缺少 apiKey'}), 400
+    try:
+        resp = requests.post(SEO_WORKER_URL, json=data, timeout=120)
+        return Response(resp.content, status=resp.status_code,
+                        content_type=resp.headers.get('Content-Type', 'application/json'))
+    except requests.Timeout:
+        return jsonify({'error': 'Worker 超时，请稍后重试'}), 504
+    except Exception as e:
+        return jsonify({'error': f'代理请求失败: {str(e)}'}), 502
+
+@app.route('/api/seo/rewrite', methods=['POST', 'OPTIONS'])
+def seo_rewrite():
+    """代理前端的 SEO 重写请求到 Worker"""
+    if request.method == 'OPTIONS':
+        return '', 204
+    data = request.get_json(force=True)
+    if not data or not data.get('apiKey'):
+        return jsonify({'error': '缺少 apiKey'}), 400
+    try:
+        resp = requests.post(SEO_WORKER_URL, json=data, timeout=120)
+        return Response(resp.content, status=resp.status_code,
+                        content_type=resp.headers.get('Content-Type', 'application/json'))
+    except requests.Timeout:
+        return jsonify({'error': 'Worker 超时，请稍后重试'}), 504
+    except Exception as e:
+        return jsonify({'error': f'代理请求失败: {str(e)}'}), 502
 
 
 if __name__ == '__main__':
