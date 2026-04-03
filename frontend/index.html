@@ -207,24 +207,7 @@
         .toast.error { background: #ff4d4f; }
 
         /* ═══════════════ 第二页: AI 生成 ═══════════════ */
-        .api-config {
-            background: #fff; padding: 16px 20px; border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,.06); margin-bottom: 16px;
-        }
-        .api-config h3 { font-size: 15px; margin-bottom: 10px; color: #555; }
         .api-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-        .api-row input {
-            flex: 1; min-width: 200px; padding: 10px 14px; border: 2px solid #e0e0e0;
-            border-radius: 8px; font-size: 14px; outline: none; transition: border-color .2s;
-        }
-        .api-row input:focus { border-color: #667eea; }
-        .api-row .btn-save-key {
-            padding: 10px 20px; background: #52c41a; color: #fff; border: none;
-            border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
-        }
-        .api-row .btn-save-key:hover { background: #46a817; }
-        .api-saved-hint { font-size: 12px; color: #52c41a; margin-top: 6px; display: none; }
-
         .gen-toolbar {
             background: #fff; padding: 14px 20px; border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,.06); margin-bottom: 16px;
@@ -394,8 +377,32 @@
             max-width: 960px; margin: 0 auto; padding: 48px 20px;
         }
         .home-subtitle {
-            text-align: center; font-size: 15px; color: #888; margin-bottom: 36px;
+            text-align: center; font-size: 15px; color: #888; margin-bottom: 28px;
         }
+        .home-api-bar {
+            max-width: 560px; margin: 0 auto 12px; display: flex; gap: 10px; align-items: center;
+            background: #fff; padding: 14px 20px; border-radius: 14px;
+            box-shadow: 0 2px 12px rgba(0,0,0,.06); border: 2px solid #eef2ff;
+        }
+        .home-api-bar .api-icon { font-size: 20px; flex-shrink: 0; }
+        .home-api-bar .api-label { font-size: 13px; font-weight: 700; color: #333; white-space: nowrap; min-width: 60px; }
+        .home-api-bar input {
+            flex: 1; min-width: 0; padding: 9px 14px; border: 2px solid #e0e0e0;
+            border-radius: 8px; font-size: 14px; outline: none; transition: border-color .2s;
+        }
+        .home-api-bar input:focus { border-color: #667eea; }
+        .home-api-bar .btn-save-key {
+            padding: 9px 18px; background: #52c41a; color: #fff; border: none;
+            border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap;
+        }
+        .home-api-bar .btn-save-key:hover { background: #46a817; }
+        .home-api-bar .api-ok { font-size: 16px; color: #52c41a; display: none; flex-shrink: 0; }
+        .platform-select-bar {
+            max-width: 560px; margin: 0 auto 28px; display: flex; gap: 16px; align-items: center;
+            justify-content: center; padding: 8px 0; font-size: 14px; color: #555;
+        }
+        .platform-select-bar label { display: flex; align-items: center; gap: 4px; cursor: pointer; font-weight: 600; }
+        .platform-select-bar input[type="radio"] { accent-color: #667eea; }
         .tool-grid {
             display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 28px;
@@ -514,6 +521,154 @@
             padding: 7px 12px; border-bottom: 1px solid #f0f0f0; font-size: 13px;
         }
         .de-dict-table tr:hover { background: #f9f9ff; }
+
+        /* ── SEO 导入工具 ── */
+        .seo-layout { display:flex; gap:28px; align-items:flex-start; }
+        .seo-left { width:400px; flex-shrink:0; }
+        .seo-right { flex:1; min-width:0; }
+        @media(max-width:960px){ .seo-layout{flex-direction:column;} .seo-left{width:100%;} }
+        .seo-panel { background:#fff; border-radius:16px; box-shadow:0 2px 16px rgba(0,0,0,.07); padding:24px; margin-bottom:20px; }
+        .seo-panel h3 { font-size:15px; font-weight:700; color:#333; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+        .seo-label { font-size:12px; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:.05em; margin-bottom:6px; display:block; }
+        .seo-label .seo-label-hint { font-weight:400; color:#a0aec0; text-transform:none; letter-spacing:0; }
+        .seo-input { width:100%; padding:10px 14px; border-radius:10px; border:1.5px solid #e8e8e8; font-size:14px; box-sizing:border-box; outline:none; transition:border-color .2s; }
+        .seo-input:focus { border-color:#667eea; }
+        .seo-select { width:100%; padding:10px 14px; border-radius:10px; border:1.5px solid #e8e8e8; font-size:14px; box-sizing:border-box; outline:none; background:#fff; cursor:pointer; }
+        .seo-textarea { width:100%; padding:10px 14px; border-radius:10px; border:1.5px solid #e8e8e8; font-size:14px; box-sizing:border-box; outline:none; resize:vertical; transition:border-color .2s; }
+        .seo-textarea:focus { border-color:#667eea; }
+        .seo-cta-url { width:100%; padding:10px 14px; border-radius:10px; border:2px dashed #d1d5db; background:#f9fafb; font-size:13px; color:#6b7280; min-height:40px; box-sizing:border-box; word-break:break-all; }
+        .seo-cta-url em { color:#cbd5e0; font-style:italic; }
+        .btn-seo-generate { width:100%; height:46px; background:linear-gradient(135deg,#4f46e5,#7c3aed); color:#fff; border:none; border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:opacity .2s; margin-top:4px; }
+        .btn-seo-generate:disabled { opacity:.5; cursor:not-allowed; }
+        .btn-seo-export { width:100%; height:42px; background:#059669; color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; margin-top:8px; }
+        .btn-seo-export:disabled { opacity:.4; cursor:not-allowed; }
+        /* Section 列表 (可拖拽) */
+        .seo-section-list { display:flex; flex-direction:column; gap:6px; }
+        .seo-section-item { background:#fff; border-radius:10px; padding:10px 12px; border:1.5px solid #e8e8e8; transition:all .15s; }
+        .seo-section-item.drag-over { border-color:#818cf8; background:#eef2ff; }
+        .seo-section-row { display:flex; align-items:center; gap:8px; }
+        .seo-drag-handle { cursor:grab; color:#cbd5e0; padding:2px; display:flex; align-items:center; font-size:16px; user-select:none; }
+        .seo-drag-handle:active { cursor:grabbing; }
+        .seo-section-item input[type=checkbox] { width:16px; height:16px; accent-color:#4f46e5; cursor:pointer; flex-shrink:0; }
+        .seo-section-label { font-size:13px; font-weight:600; color:#374151; flex:1; }
+        .seo-section-badge { font-size:10px; font-weight:700; color:#fff; background:#4f46e5; padding:2px 7px; border-radius:5px; flex-shrink:0; }
+        .seo-section-count { display:flex; align-items:center; gap:4px; font-size:12px; color:#6b7280; flex-shrink:0; }
+        .seo-section-count input { width:40px; height:26px; text-align:center; border:1px solid #d1d5db; border-radius:6px; font-size:12px; }
+        .seo-section-sub { display:flex; align-items:center; gap:8px; margin-left:30px; margin-top:6px; padding-left:8px; border-left:2px solid #eef2ff; font-size:12px; color:#6b7280; }
+        .seo-section-sub input[type=checkbox] { width:14px; height:14px; accent-color:#7c3aed; }
+        /* Section 模块样式预览卡片 */
+        .seo-module-card { margin-top:8px; margin-left:30px; padding:10px 12px; border:1.5px solid #e2e8f0; border-radius:10px; background:#f8fafc; }
+        .seo-module-card .mc-header { display:flex; align-items:center; gap:6px; margin-bottom:8px; font-size:11px; font-weight:700; color:#4338ca; }
+        .seo-module-card .mc-header .mc-badge { padding:2px 8px; background:#eef2ff; border:1px solid #c7d2fe; border-radius:6px; }
+        .seo-module-card .mc-layout { display:flex; flex-direction:column; gap:6px; }
+        .seo-module-card .mc-hero-img { width:100%; max-height:80px; object-fit:cover; border-radius:6px; border:1px solid #e2e8f0; }
+        .seo-module-card .mc-text-block { background:#fff; border:1px solid #e2e8f0; border-radius:6px; padding:6px 8px; font-size:10px; color:#64748b; line-height:1.4; }
+        .seo-module-card .mc-text-block .mc-title { font-weight:700; color:#1e293b; font-size:11px; margin-bottom:2px; }
+        .seo-module-card .mc-grid { display:grid; gap:6px; }
+        .seo-module-card .mc-grid-item { background:#fff; border:1px solid #e2e8f0; border-radius:6px; padding:6px; display:flex; flex-direction:column; gap:4px; }
+        .seo-module-card .mc-grid-item img { width:100%; height:48px; object-fit:cover; border-radius:4px; }
+        .seo-module-card .mc-grid-item .mc-icon { width:24px; height:24px; border-radius:4px; background:#fff7ed; display:flex; align-items:center; justify-content:center; font-size:14px; }
+        .seo-module-card .mc-grid-item .mc-item-title { font-size:10px; font-weight:600; color:#334155; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .seo-module-card .mc-btn-mock { display:inline-block; padding:3px 10px; background:#4f46e5; color:#fff; border-radius:4px; font-size:9px; font-weight:600; margin-top:4px; }
+        .seo-module-card .mc-faq-item { background:#fff; border:1px solid #e2e8f0; border-radius:6px; padding:5px 8px; font-size:10px; color:#475569; }
+        .seo-module-card .mc-faq-item strong { color:#1e293b; }
+        .seo-module-card .mc-alt-row { display:flex; gap:6px; align-items:center; }
+        .seo-module-card .mc-alt-row img { width:40%; max-height:60px; object-fit:cover; border-radius:6px; border:1px solid #e2e8f0; }
+        .seo-module-card .mc-alt-row .mc-text-block { flex:1; }
+        /* 风格面板 */
+        .seo-style-panel { background:#f5f3ff; border:1.5px solid #ddd6fe; border-radius:12px; overflow:hidden; }
+        .seo-style-toggle { width:100%; display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:none; border:none; cursor:pointer; font-size:13px; font-weight:700; color:#6d28d9; }
+        .seo-style-toggle:hover { background:#ede9fe; }
+        .seo-style-body { padding:12px 14px; border-top:1px solid #ddd6fe; display:flex; flex-direction:column; gap:10px; }
+        .seo-style-mode { display:flex; border-radius:8px; overflow:hidden; border:1.5px solid #ddd6fe; background:#fff; }
+        .seo-style-mode button { flex:1; padding:6px 4px; background:none; border:none; font-size:11px; font-weight:600; cursor:pointer; color:#888; transition:all .2s; }
+        .seo-style-mode button.active { background:#7c3aed; color:#fff; }
+        /* 结果卡片 */
+        .seo-result-card { background:#fff; border-radius:14px; box-shadow:0 2px 14px rgba(0,0,0,.07); padding:20px 24px; margin-bottom:16px; border-left:4px solid #e2e8f0; transition:border-color .2s; }
+        .seo-result-card.meta { border-left-color:#818cf8; background:#f5f3ff; }
+        .seo-result-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid #f1f5f9; padding-bottom:8px; flex-wrap:wrap; gap:6px; }
+        .seo-result-title { font-size:14px; font-weight:700; color:#4f46e5; display:flex; align-items:center; gap:6px; }
+        .seo-result-actions { display:flex; gap:4px; flex-wrap:wrap; }
+        .seo-result-actions button { font-size:11px; padding:4px 10px; border-radius:6px; border:1px solid #e2e8f0; background:#fff; color:#64748b; cursor:pointer; display:flex; align-items:center; gap:3px; transition:all .15s; }
+        .seo-result-actions button:hover { background:#f1f5f9; border-color:#94a3b8; }
+        .seo-result-content { font-size:13px; color:#374151; line-height:1.8; white-space:pre-wrap; word-break:break-word; }
+        .seo-rewrite-box { background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px; margin-bottom:10px; }
+        .seo-rewrite-box textarea { width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:13px; resize:vertical; box-sizing:border-box; outline:none; }
+        .seo-rewrite-box .seo-rw-btns { display:flex; justify-content:flex-end; gap:6px; margin-top:6px; }
+        .seo-rewrite-box button { font-size:12px; padding:4px 12px; border-radius:6px; cursor:pointer; border:1px solid #d1d5db; background:#fff; }
+        .seo-rewrite-box button.primary { background:#4f46e5; color:#fff; border-color:#4f46e5; }
+        .seo-result-edit textarea { width:100%; min-height:120px; padding:10px; border:1px solid #d1d5db; border-radius:8px; font-size:13px; font-family:monospace; resize:vertical; box-sizing:border-box; outline:none; }
+        .seo-toolbar { display:flex; gap:6px; flex-wrap:wrap; }
+        .seo-toolbar button { font-size:12px; padding:6px 14px; border-radius:20px; border:none; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:4px; transition:all .15s; }
+        .seo-toolbar .btn-density { background:#eab308; color:#fff; }
+        .seo-toolbar .btn-density:disabled { opacity:.5; }
+        .seo-toolbar .btn-copyall { background:#334155; color:#fff; }
+        .seo-toolbar .btn-copyall:disabled { opacity:.5; }
+        /* 密度报告 */
+        .seo-density-report { background:#fefce8; border:1px solid #fde68a; border-radius:12px; padding:16px; margin-bottom:16px; font-size:13px; }
+        .seo-density-report h4 { font-size:14px; font-weight:700; color:#92400e; margin-bottom:10px; }
+        .seo-density-table { width:100%; border-collapse:collapse; font-size:12px; }
+        .seo-density-table th { text-transform:uppercase; font-size:11px; color:#92400e; background:#fef9c3; padding:6px 8px; text-align:left; }
+        .seo-density-table td { padding:6px 8px; border-top:1px solid #fde68a; }
+        .seo-density-ok { color:#16a34a; font-weight:700; }
+        .seo-density-low { color:#ea580c; font-weight:700; }
+        .seo-density-miss { color:#94a3b8; }
+        .seo-meta-check { font-size:12px; margin-top:8px; padding:10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; }
+        .seo-meta-check .ok { color:#16a34a; font-weight:700; }
+        .seo-meta-check .warn { color:#ea580c; font-weight:700; }
+        /* Metadata 勾选框 */
+        .seo-check-group { background:#eef2ff; border:1.5px solid #c7d2fe; padding:12px 14px; border-radius:10px; display:flex; flex-direction:column; gap:8px; }
+        .seo-check-group label { display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; font-weight:600; color:#4338ca; }
+        .seo-check-group label.sub { margin-left:24px; font-size:12px; font-weight:500; color:#64748b; border-left:2px solid #c7d2fe; padding-left:10px; }
+        .seo-check-group input[type=checkbox] { width:16px; height:16px; accent-color:#4f46e5; }
+        .seo-status { font-size:13px; color:#6b7280; text-align:center; margin-top:8px; min-height:20px; }
+        .seo-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; height:300px; color:#d1d5db; font-size:14px; gap:12px; }
+        .seo-model-tabs { display:flex; border-radius:10px; overflow:hidden; border:1.5px solid #e8e8e8; background:#fff; }
+        .seo-model-tab { flex:1; padding:8px 4px; background:none; border:none; font-size:11px; font-weight:600; cursor:pointer; color:#888; transition:all .2s; }
+        .seo-model-tab.active { background:#4f46e5; color:#fff; }
+
+        /* ── 生成 Section 图片页 ── */
+        .btn-seo-imggen { width:100%; height:42px; background:#7c3aed; color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; margin-top:8px; }
+        .btn-seo-imggen:disabled { opacity:.4; cursor:not-allowed; }
+        #seoImgGenTool { display:none; }
+        #seoImgGenTool .header { display:flex; align-items:center; gap:12px; padding:18px 24px; background:linear-gradient(135deg,#4f46e5,#7c3aed); color:#fff; border-radius:14px; margin-bottom:20px; }
+        #seoImgGenTool .header h1 { font-size:20px; margin:0; font-weight:700; }
+        .imggen-container { max-width:960px; margin:0 auto; padding:0 20px 40px; }
+        .imggen-info-bar { display:flex; gap:8px; align-items:center; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:10px 14px; font-size:13px; color:#15803d; margin-bottom:16px; }
+        .imggen-section-list { display:flex; flex-direction:column; gap:12px; margin-bottom:24px; }
+        .imggen-section-card { background:#fff; border:1.5px solid #e2e8f0; border-radius:12px; padding:16px; transition:all .15s; }
+        .imggen-section-card:hover { border-color:#a5b4fc; }
+        .imggen-section-card .sec-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+        .imggen-section-card .sec-title { font-size:15px; font-weight:700; color:#1e293b; display:flex; align-items:center; gap:8px; }
+        .imggen-section-card .sec-badge { font-size:10px; padding:2px 8px; border-radius:20px; background:#eef2ff; color:#4f46e5; font-weight:600; }
+        .imggen-section-card .sec-desc { font-size:12px; color:#64748b; line-height:1.6; margin-bottom:10px; }
+        .imggen-section-card .sec-items { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:8px; margin-bottom:10px; }
+        .imggen-item { background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px; font-size:12px; }
+        .imggen-item .item-label { font-weight:600; color:#334155; margin-bottom:4px; }
+        .imggen-item .item-alt { color:#64748b; font-size:11px; }
+        .imggen-item .item-img-wrap { width:100%; height:120px; background:#f1f5f9; border-radius:6px; margin-top:6px; display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative; }
+        .imggen-item .item-img-wrap img { width:100%; height:100%; object-fit:cover; }
+        .imggen-item .item-img-wrap .placeholder { color:#94a3b8; font-size:11px; }
+        .imggen-item .item-status { font-size:10px; margin-top:4px; color:#94a3b8; }
+        .imggen-item .item-status.done { color:#16a34a; }
+        .imggen-item .item-status.error { color:#ef4444; }
+        .imggen-item .item-status.loading { color:#eab308; }
+        .imggen-item .item-cb-row { display:flex; align-items:center; gap:6px; margin-bottom:4px; }
+        .imggen-item .item-cb-row input[type=checkbox] { width:14px; height:14px; accent-color:#7c3aed; }
+        .imggen-item .item-regen-btn { font-size:10px; padding:2px 8px; border-radius:5px; border:1px solid #e2e8f0; background:#f8fafc; color:#64748b; cursor:pointer; margin-top:4px; }
+        .imggen-item .item-regen-btn:hover { border-color:#7c3aed; color:#7c3aed; }
+        .imggen-item .item-regen-btn:disabled { opacity:.4; cursor:not-allowed; }
+        .imggen-actions { display:flex; gap:10px; flex-wrap:wrap; }
+        .imggen-actions button { padding:10px 24px; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; border:none; display:flex; align-items:center; gap:6px; transition:all .15s; }
+        .imggen-actions .btn-gen-all { background:#7c3aed; color:#fff; }
+        .imggen-actions .btn-gen-all:disabled { opacity:.4; cursor:not-allowed; }
+        .imggen-actions .btn-gen-selected { background:#059669; color:#fff; }
+        .imggen-actions .btn-gen-selected:disabled { opacity:.4; cursor:not-allowed; }
+        .imggen-actions .btn-back { background:#f1f5f9; color:#64748b; border:1px solid #e2e8f0; }
+        .imggen-select-bar { display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+        .imggen-select-bar label { display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:#334155; cursor:pointer; }
+        .imggen-select-bar input[type=checkbox] { width:16px; height:16px; accent-color:#7c3aed; }
+        .imggen-progress { font-size:13px; color:#64748b; margin-top:8px; min-height:20px; }
     </style>
 </head>
 <body>
@@ -526,6 +681,33 @@
 
 <div id="homePage" class="home-page">
     <p class="home-subtitle">选择一个工具开始使用</p>
+    <div class="home-api-bar">
+        <span class="api-icon">🔑</span>
+        <span class="api-label">Apimart</span>
+        <input id="apimartKeyInput" type="password" placeholder="Apimart API Key（SEO / 重命名 / 图片生成）" />
+        <button class="btn-save-key" id="apimartSaveBtn">保存</button>
+        <span class="api-ok" id="apimartKeyOk">✅</span>
+    </div>
+    <div class="home-api-bar">
+        <span class="api-icon">🔑</span>
+        <span class="api-label">KIE.ai</span>
+        <input id="kieKeyInput" type="password" placeholder="KIE.ai API Key（图片生成）" />
+        <button class="btn-save-key" id="kieSaveBtn">保存</button>
+        <span class="api-ok" id="kieKeyOk">✅</span>
+    </div>
+    <div class="home-api-bar">
+        <span class="api-icon">🔑</span>
+        <span class="api-label">OneAPI</span>
+        <input id="oneapiKeyInput" type="password" placeholder="OneAPI API Key（图片生成）" />
+        <button class="btn-save-key" id="oneapiSaveBtn">保存</button>
+        <span class="api-ok" id="oneapiKeyOk">✅</span>
+    </div>
+    <div class="platform-select-bar">
+        <span>图片生成平台：</span>
+        <label><input type="radio" name="imgPlatform" value="apimart" checked> Apimart</label>
+        <label><input type="radio" name="imgPlatform" value="kie"> KIE.ai</label>
+        <label><input type="radio" name="imgPlatform" value="oneapi"> OneAPI</label>
+    </div>
     <div class="tool-grid">
         <div class="tool-card" data-tool="coloring">
             <div class="tool-icon">🎨</div>
@@ -539,6 +721,12 @@
             <p>输入英文标签，根据内置词表自动翻译为德文，支持精确匹配和逐词翻译</p>
             <span class="tool-tag ready">可用</span>
         </div>
+        <div class="tool-card" data-tool="seo-import">
+            <div class="tool-icon">📋</div>
+            <h3>填色页SEO系统导入</h3>
+            <p>AI 生成 SEO 文案 → 关键词密度检查 → 按模板映射导出 JSON，支持风格模仿与重写</p>
+            <span class="tool-tag ready">可用</span>
+        </div>
     </div>
 </div>
 
@@ -550,8 +738,8 @@
     <p>抓取图片 / 上传图片 → AI 生成黑白填色页 → AI 智能重命名</p>
     <div class="step-nav">
         <button class="step active" data-page="1">第一步：抓取图片</button>
-        <button class="step disabled" data-page="2">第二步：生成填色页</button>
-        <button class="step disabled" data-page="3">第三步：智能重命名</button>
+        <button class="step" data-page="2">第二步：生成填色页</button>
+        <button class="step" data-page="3">第三步：智能重命名</button>
     </div>
 </div>
 
@@ -616,15 +804,6 @@
 <!-- ═══════════════ 第二页: AI 生成填色页 ═══════════════ -->
 <div class="page" id="page2">
 <div class="container">
-    <div class="api-config">
-        <h3>API 配置</h3>
-        <div class="api-row">
-            <input id="apiKeyInput" type="password" placeholder="输入你的 API Key (apimart.ai)" />
-            <button class="btn-save-key" id="saveKeyBtn">保存</button>
-        </div>
-        <div class="api-saved-hint" id="apiSavedHint">✅ API Key 已保存</div>
-    </div>
-
     <div class="gen-toolbar">
         <div class="gen-info">
             共 <strong id="genTotalCount">0</strong> 张原图
@@ -663,6 +842,11 @@
     <div class="rename-config">
         <h3>主题词设置</h3>
         <p style="font-size:13px;color:#888;margin-bottom:10px">输入主题词，AI 将根据每张填色页的画面内容和主题词自动生成规范的文件名</p>
+        <div class="api-row" style="margin-bottom:10px">
+            <button class="btn-gen-all" id="p3UploadBtn" style="background:#1890ff">📤 直接上传填色页</button>
+            <input type="file" id="p3FileInput" multiple accept="image/*" style="display:none" />
+            <span style="font-size:12px;color:#888;margin-left:8px">可直接上传已完成的黑白填色页，跳过 AI 生成步骤</span>
+        </div>
         <div class="api-row">
             <input id="themeInput" type="text" placeholder="输入主题词，例如 Cozy Friends" style="flex:2" />
             <button class="btn-gen-all" id="startRenameBtn">开始 AI 重命名</button>
@@ -734,6 +918,217 @@
 </div>
 </div><!-- /germanTool -->
 
+<!-- ═══════════════ SEO 系统导入工具 ═══════════════ -->
+<div id="seoImportTool" style="display:none">
+<div class="header" id="seoImportHeader">
+    <div class="header-back"><button class="back-home-btn" id="seoImportBackBtn">← 返回首页</button></div>
+    <h1>填色页SEO系统导入</h1>
+    <p>AI 生成 SEO 文案 → 关键词密度检查 → 按 iPage 模板映射导出 JSON</p>
+</div>
+<div class="container">
+    <div class="seo-layout">
+        <!-- 左侧配置面板 -->
+        <div class="seo-left">
+            <div class="seo-panel">
+                <h3>⚙️ 输入与配置</h3>
+
+                <!-- 项目选择 -->
+                <div style="margin-bottom:14px">
+                    <span class="seo-label">选择项目</span>
+                    <select class="seo-select" id="seoProject">
+                        <option value="ipage" selected>iPage</option>
+                    </select>
+                </div>
+
+                <!-- 品牌名称 -->
+                <div style="margin-bottom:14px">
+                    <span class="seo-label">品牌名称 (Brand Name)</span>
+                    <input class="seo-input" id="seoBrandName" type="text" value="iPage" placeholder="例如：iPage" />
+                </div>
+
+                <!-- 核心关键词 -->
+                <div style="margin-bottom:14px">
+                    <span class="seo-label">核心关键词 (Core Keyword)</span>
+                    <input class="seo-input" id="seoCoreKeyword" type="text" placeholder="例如：AI Coloring Page Generator" />
+                </div>
+
+                <!-- 次要关键词 -->
+                <div style="margin-bottom:14px">
+                    <span class="seo-label">次要关键词（每行一个）</span>
+                    <textarea class="seo-textarea" id="seoSecondaryKeywords" rows="4" placeholder="例如：&#10;Coloring Pages For Kids&#10;Printable Coloring Pages"></textarea>
+                </div>
+
+                <!-- 关键词密度目标 -->
+                <div style="margin-bottom:14px">
+                    <span class="seo-label">密度目标 (%)</span>
+                    <div style="display:flex;gap:10px">
+                        <div style="flex:1">
+                            <div style="font-size:11px;color:#6b7280;margin-bottom:4px">核心关键词</div>
+                            <input class="seo-input" id="seoDensityTargetCore" type="number" min="0.1" max="10" step="0.1" value="2" style="text-align:center" />
+                        </div>
+                        <div style="flex:1">
+                            <div style="font-size:11px;color:#6b7280;margin-bottom:4px">次要关键词总计</div>
+                            <input class="seo-input" id="seoDensityTargetSec" type="number" min="0.1" max="10" step="0.1" value="3" style="text-align:center" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CTA URL -->
+                <div style="margin-bottom:14px">
+                    <span class="seo-label">CTA 链接 URL <span class="seo-label-hint">(自动生成)</span></span>
+                    <div class="seo-cta-url" id="seoCtaUrl"><em>输入核心关键词后自动生成</em></div>
+                    <div style="font-size:11px;color:#94a3b8;margin-top:4px">根据核心关键词自动生成，将填充到所有 CTA 按钮链接</div>
+                </div>
+
+                <!-- 页面功能描述 -->
+                <div style="margin-bottom:14px">
+                    <span class="seo-label">页面功能描述</span>
+                    <textarea class="seo-textarea" id="seoCustomPrompt" rows="3" placeholder="例如：要求文案语气轻松有趣，面向年轻设计师群体。"></textarea>
+                </div>
+
+                <!-- 风格模仿面板 -->
+                <div style="margin-bottom:14px">
+                    <div class="seo-style-panel">
+                        <button type="button" class="seo-style-toggle" id="seoStyleToggle">
+                            <span>🔗 风格模仿</span>
+                            <span id="seoStyleArrow">▼</span>
+                        </button>
+                        <div class="seo-style-body" id="seoStyleBody" style="display:none">
+                            <div style="font-size:11px;color:#7c3aed">后端自动抓取页面正文并提取写作风格指纹，模仿其表达方式。</div>
+                            <div>
+                                <span class="seo-label">参考网址（每行一个，最多3个）</span>
+                                <textarea class="seo-textarea" id="seoStyleUrls" rows="3" placeholder="https://example.com/page1&#10;https://example.com/page2" style="font-family:monospace;font-size:12px"></textarea>
+                            </div>
+                            <div>
+                                <span class="seo-label">模仿力度</span>
+                                <div class="seo-style-mode" id="seoStyleMode">
+                                    <button type="button" data-mode="light">轻度</button>
+                                    <button type="button" data-mode="balanced" class="active">平衡</button>
+                                    <button type="button" data-mode="strong">强化</button>
+                                </div>
+                                <div style="font-size:10px;color:#94a3b8;margin-top:4px" id="seoStyleModeHint">借鉴句法、语气与叙事组织，但保持品牌差异</div>
+                            </div>
+                            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:#475569">
+                                <input type="checkbox" id="seoStyleCrawl" checked style="width:15px;height:15px;accent-color:#7c3aed" />
+                                后端自动爬取（关闭则仅当作提示词使用）
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SEO Metadata 勾选 -->
+                <div style="margin-bottom:14px">
+                    <div class="seo-check-group">
+                        <label>
+                            <input type="checkbox" id="seoIncludeMetadata" checked />
+                            生成 SEO Metadata
+                        </label>
+                        <label class="sub">
+                            <input type="checkbox" id="seoIncludeBrand" />
+                            Title 包含品牌名
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Section 列表 (可拖拽) -->
+                <div style="margin-bottom:16px">
+                    <span class="seo-label">所需 Section 种类与顺序 (可拖拽)</span>
+                    <div class="seo-section-list" id="seoSectionList"></div>
+                </div>
+
+                <!-- 模型选择 -->
+                <div style="margin-bottom:16px">
+                    <span class="seo-label">生成模型</span>
+                    <div class="seo-model-tabs" id="seoModelTabs">
+                        <button class="seo-model-tab" data-model="claude-haiku-4-5-20251001">Claude Haiku</button>
+                        <button class="seo-model-tab active" data-model="gemini-3.1-pro-preview-apimart">Gemini 3.1</button>
+                        <button class="seo-model-tab" data-model="claude-sonnet-4-6">Claude Sonnet</button>
+                    </div>
+                </div>
+
+                <!-- 错误提示 -->
+                <div id="seoErrorMsg" style="color:#ef4444;font-size:13px;margin-bottom:8px;display:none"></div>
+
+                <!-- 生成按钮 -->
+                <button class="btn-seo-generate" id="seoGenerateBtn">
+                    ✨ 生成 SEO 文案
+                </button>
+
+                <!-- 导出按钮 -->
+                <button class="btn-seo-export" id="seoExportBtn" disabled>
+                    ⬇️ 下载 SEO 系统 JSON
+                </button>
+
+                <!-- 生成 Section 图片按钮 -->
+                <button class="btn-seo-imggen" id="seoImgGenBtn" disabled>
+                    🖼️ 生成 Section 图片
+                </button>
+
+                <div class="seo-status" id="seoStatusMsg">请填写必要信息并点击生成</div>
+            </div>
+        </div>
+
+        <!-- 右侧结果 -->
+        <div class="seo-right">
+            <div class="seo-panel">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid #f1f5f9;padding-bottom:10px;flex-wrap:wrap;gap:8px">
+                    <h3 style="margin-bottom:0">📄 文案生成结果</h3>
+                    <div class="seo-toolbar">
+                        <button class="btn-density" id="seoDensityBtn" disabled>📊 检查关键词密度</button>
+                        <button class="btn-copyall" id="seoCopyAllBtn" disabled>📋 全部复制</button>
+                    </div>
+                </div>
+                <div id="seoDensityReport" style="display:none"></div>
+                <div id="seoResultBody">
+                    <div class="seo-empty">
+                        <div style="font-size:48px">📋</div>
+                        <div>生成的文案将按 Section 顺序显示在这里</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div><!-- /seoImportTool -->
+
+<!-- ═══════════════ Section 图片生成页 ═══════════════ -->
+<div id="seoImgGenTool">
+    <div class="header">
+        <button class="back-home-btn" id="imgGenBackBtn" style="background:rgba(255,255,255,.2);color:#fff;border:none;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">← 返回 SEO 工具</button>
+        <h1>🖼️ Section 图片生成</h1>
+    </div>
+    <div class="imggen-container">
+        <div class="imggen-info-bar" id="imgGenInfoBar">
+            <span>📌</span>
+            <span>核心关键词：<strong id="imgGenKeyword">-</strong></span>
+        </div>
+
+        <div class="imggen-provider-bar" style="display:flex;align-items:center;gap:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:13px;color:#334155;margin-bottom:16px;flex-wrap:wrap">
+            <span style="font-weight:600">🎨 生图平台：</span>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="radio" name="imgGenProvider" value="apimart" checked> Apimart</label>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="radio" name="imgGenProvider" value="kie"> KIE.ai</label>
+            <span style="color:#94a3b8;font-size:11px;margin-left:8px">提示词生成始终使用 Apimart Key</span>
+        </div>
+
+        <div class="imggen-select-bar">
+            <label><input type="checkbox" id="imgGenSelectAll" checked> 全选</label>
+            <span style="color:#94a3b8;font-size:12px">选择需要生成图片的 Section</span>
+        </div>
+
+        <div class="imggen-section-list" id="imgGenSectionList">
+            <!-- JS 动态渲染 -->
+        </div>
+
+        <div class="imggen-actions">
+            <button class="btn-gen-all" id="imgGenAllBtn">🚀 生成全部图片</button>
+            <button class="btn-gen-selected" id="imgGenSelectedBtn">🔄 重生选中图片</button>
+            <button class="btn-gen-all" id="imgGenDownloadBtn" style="background:#0891b2" disabled>📦 打包下载 ZIP</button>
+            <button class="btn-back" id="imgGenBackBtn2">← 返回</button>
+        </div>
+        <div class="imggen-progress" id="imgGenProgress"></div>
+    </div>
+</div>
+
 <div class="toast-wrap" id="toastWrap"></div>
 <input type="file" id="fileInput" multiple accept="image/*" style="display:none" />
 
@@ -745,11 +1140,12 @@ window.onerror = function(msg, src, line, col, err) {
 (() => {
     /* ═══════════════ 公共工具 ═══════════════ */
     // ▼▼▼ 部署配置：修改此处指向您的后端地址 ▼▼▼
-    // 本地开发: 自动使用 localhost:5002
+    // 本地开发: 前端 http://localhost:8080, 后端 http://localhost:5002
     // 线上部署: 改为后端实际地址，如 'https://your-backend.onrender.com'
     const BACKEND = window.__BACKEND_URL__
         || (location.hostname === 'localhost' || location.hostname === '127.0.0.1'
-            ? location.protocol + '//' + location.hostname + ':5002'
+            || location.protocol === 'file:'
+            ? 'http://localhost:5002'
             : 'https://photo-to-coloring-page-tool-production.up.railway.app');
     const BATCH_SIZE = 50;
 
@@ -866,63 +1262,18 @@ window.onerror = function(msg, src, line, col, err) {
         const genData = genItems.map(g => ({
             src: g.src, alt: g.alt, _b64: g._b64 || null,
             resultUrl: g.resultUrl || null, resultB64: g.resultB64 || null,
-            status: g.status, error: g.error || null, taskId: g.taskId || null
+            status: g.status, error: g.error || null, taskId: g.taskId || null,
+            platform: g.platform || 'apimart'
         }));
         await dbPut('state', sKey('genItems'), genData);
     }
 
     async function loadAppState() {
         if (!db) return;
-        let saved = await dbGet('state', sKey('confirmedImages'));
-        let page = await dbGet('state', sKey('currentPage'));
-        let confirmed = await dbGet('state', sKey('isConfirmed'));
-        let savedGen = await dbGet('state', sKey('genItems'));
-
-        // 刷新后若 sessionStorage 意外丢失 tab id，则回退到最近一次会话数据
-        if (!saved && !savedGen) {
-            try {
-                const keys = await dbGetAllKeys('state');
-                const sessionPrefixes = new Set();
-                keys.forEach(k => {
-                    if (typeof k !== 'string') return;
-                    if (!k.includes(':')) return;
-                    const pos = k.indexOf(':');
-                    sessionPrefixes.add(k.slice(0, pos));
-                });
-
-                if (sessionPrefixes.size > 0) {
-                    const sorted = Array.from(sessionPrefixes).sort((a, b) => {
-                        const ta = parseInt(String(a).split('_')[0], 10) || 0;
-                        const tb = parseInt(String(b).split('_')[0], 10) || 0;
-                        return tb - ta;
-                    });
-                    const latest = sorted[0];
-
-                    const fallbackSaved = await dbGet('state', latest + ':confirmedImages');
-                    const fallbackPage = await dbGet('state', latest + ':currentPage');
-                    const fallbackConfirmed = await dbGet('state', latest + ':isConfirmed');
-                    const fallbackGen = await dbGet('state', latest + ':genItems');
-                    const fallbackRename = await dbGet('state', latest + ':renameItems');
-
-                    if (fallbackSaved || fallbackGen || fallbackRename) {
-                        saved = fallbackSaved;
-                        page = fallbackPage;
-                        confirmed = fallbackConfirmed;
-                        savedGen = fallbackGen;
-
-                        await dbPut('state', sKey('confirmedImages'), fallbackSaved || []);
-                        await dbPut('state', sKey('currentPage'), fallbackPage || 1);
-                        await dbPut('state', sKey('isConfirmed'), !!fallbackConfirmed);
-                        await dbPut('state', sKey('genItems'), fallbackGen || []);
-                        if (fallbackRename) {
-                            await dbPut('state', sKey('renameItems'), fallbackRename);
-                        }
-                    }
-                }
-            } catch {
-                // 回退恢复失败时，保持空状态即可
-            }
-        }
+        const saved = await dbGet('state', sKey('confirmedImages'));
+        const page = await dbGet('state', sKey('currentPage'));
+        const confirmed = await dbGet('state', sKey('isConfirmed'));
+        const savedGen = await dbGet('state', sKey('genItems'));
 
         if (saved && saved.length > 0) {
             p1ConfirmedImages = saved;
@@ -961,10 +1312,7 @@ window.onerror = function(msg, src, line, col, err) {
         showCount.textContent = '0';
         confirmedCount.textContent = '0';
         urlInput.value = '';
-        stepBtns.forEach(b => {
-            if (+b.dataset.page === 2) b.classList.add('disabled');
-            if (+b.dataset.page === 3) b.classList.add('disabled');
-        });
+
     }
 
     /* ═══════════════ 页面导航 ═══════════════ */
@@ -987,8 +1335,6 @@ window.onerror = function(msg, src, line, col, err) {
         stepBtns.forEach(b => {
             const p = +b.dataset.page;
             b.classList.toggle('active', p === n);
-            if (p === 2) b.classList.toggle('disabled', !isConfirmed);
-            if (p === 3) b.classList.toggle('disabled', !hasGenDone);
         });
         if (n === 2) { initPage2(); updateNextPageBar2(); }
         if (n === 3) initPage3();
@@ -1004,8 +1350,6 @@ window.onerror = function(msg, src, line, col, err) {
     stepBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             const p = +btn.dataset.page;
-            if (p === 2 && !isConfirmed) return;
-            if (p === 3 && !hasGenDone) return;
             showPage(p);
         });
     });
@@ -1293,8 +1637,6 @@ window.onerror = function(msg, src, line, col, err) {
         confirmedBar.classList.add('visible');
         confirmedCount.textContent = p1ConfirmedImages.length;
         nextPageBar.classList.add('visible');
-        // 更新步骤导航
-        stepBtns.forEach(b => { if (+b.dataset.page === 2) b.classList.remove('disabled'); });
         toast(`已确认保留 ${allImages.length} 张图片（共 ${p1ConfirmedImages.length} 张）`, 'success');
         // 保存到 IndexedDB
         saveAppState();
@@ -1318,11 +1660,9 @@ window.onerror = function(msg, src, line, col, err) {
             confirmedBar.classList.add('visible');
             confirmedCount.textContent = p1ConfirmedImages.length;
             nextPageBar.classList.add('visible');
-            stepBtns.forEach(b => { if (+b.dataset.page === 2) b.classList.remove('disabled'); });
         } else {
             confirmedBar.classList.remove('visible');
             nextPageBar.classList.remove('visible');
-            stepBtns.forEach(b => { if (+b.dataset.page === 2) b.classList.add('disabled'); });
         }
         preConfirmSnapshot = null;
         saveAppState();
@@ -1368,7 +1708,6 @@ window.onerror = function(msg, src, line, col, err) {
         // 上传图片后自动进入确认状态，可直接进入下一步
         if (!isConfirmed && p1ConfirmedImages.length > 0) {
             isConfirmed = true;
-            stepBtns.forEach(b => { if (+b.dataset.page === 2) b.classList.remove('disabled'); });
         }
         totalCount.textContent = allImages.length;
         showCount.textContent = gallery.querySelectorAll('.card').length;
@@ -1416,9 +1755,6 @@ window.onerror = function(msg, src, line, col, err) {
     let isGenerating = false;
     const CONCURRENCY = 3;
 
-    const apiKeyInput = document.getElementById('apiKeyInput');
-    const saveKeyBtn = document.getElementById('saveKeyBtn');
-    const apiSavedHint = document.getElementById('apiSavedHint');
     const genTotalCount = document.getElementById('genTotalCount');
     const genDoneInfo = document.getElementById('genDoneInfo');
     const genSelectedInfo = document.getElementById('genSelectedInfo');
@@ -1434,18 +1770,6 @@ window.onerror = function(msg, src, line, col, err) {
     const genProgress = document.getElementById('genProgress');
     const progressBar = document.getElementById('progressBar');
     const progressText = document.getElementById('progressText');
-
-    // API Key 持久化 (localStorage)
-    const savedKey = localStorage.getItem('apimart_api_key');
-    if (savedKey) { apiKeyInput.value = savedKey; apiSavedHint.style.display = 'block'; }
-
-    saveKeyBtn.addEventListener('click', () => {
-        const key = apiKeyInput.value.trim();
-        if (!key) { toast('请输入 API Key', 'error'); return; }
-        localStorage.setItem('apimart_api_key', key);
-        apiSavedHint.style.display = 'block';
-        toast('API Key 已保存', 'success');
-    });
 
     backToP1Btn.addEventListener('click', () => showPage(1));
 
@@ -1495,8 +1819,8 @@ window.onerror = function(msg, src, line, col, err) {
 
     // 生成选中
     genSelectedBtn.addEventListener('click', async () => {
-        const apiKey = getApiKey();
-        if (!apiKey) { toast('请先设置 API Key', 'error'); return; }
+        const apiKey = getImageApiKey();
+        if (!apiKey) { toast('请先在首页设置对应平台的 API Key', 'error'); return; }
         const indices = getSelectedGenIndices();
         if (indices.length === 0) { toast('请先选择要生成的图片', 'error'); return; }
 
@@ -1555,9 +1879,33 @@ window.onerror = function(msg, src, line, col, err) {
     });
 
     function getApiKey() {
-        const k = apiKeyInput.value.trim();
-        if (k) localStorage.setItem('apimart_api_key', k);
-        return k;
+        // 始终返回 apimart key（SEO / 重命名 用）
+        const el = document.getElementById('apimartKeyInput');
+        const k = el ? el.value.trim() : '';
+        if (k) sessionStorage.setItem('apimart_api_key', k);
+        return k || sessionStorage.getItem('apimart_api_key') || '';
+    }
+
+    function getSelectedPlatform() {
+        const el = document.querySelector('input[name="imgPlatform"]:checked');
+        return el ? el.value : 'apimart';
+    }
+
+    function getImageApiKey() {
+        const platform = getSelectedPlatform();
+        if (platform === 'kie') {
+            const el = document.getElementById('kieKeyInput');
+            const k = el ? el.value.trim() : '';
+            if (k) sessionStorage.setItem('kie_api_key', k);
+            return k || sessionStorage.getItem('kie_api_key') || '';
+        }
+        if (platform === 'oneapi') {
+            const el = document.getElementById('oneapiKeyInput');
+            const k = el ? el.value.trim() : '';
+            if (k) sessionStorage.setItem('oneapi_api_key', k);
+            return k || sessionStorage.getItem('oneapi_api_key') || '';
+        }
+        return getApiKey();
     }
 
     let genPage2Initialized = false;  // 标记第二页是否已初始化过
@@ -1603,13 +1951,13 @@ window.onerror = function(msg, src, line, col, err) {
         updateGenInfo();
 
         // 恢复因页面刷新中断的任务
-        const apiKey = getApiKey();
+        const apiKey = getImageApiKey();
         if (apiKey) {
             genItems.forEach((item, idx) => {
                 if (item.status === 'polling' && item.taskId) {
-                    // 有 taskId，恢复轮询
+                    // 有 taskId，恢复轮询（使用保存的 platform）
                     console.log('[initPage2] resuming poll for idx', idx, 'taskId', item.taskId);
-                    pollTask(idx, apiKey).then(() => updateProgress());
+                    pollTask(idx, apiKey, item.platform).then(() => updateProgress());
                 } else if (item.status === 'generating' || (item.status === 'polling' && !item.taskId)) {
                     // 提交中断或无 taskId，重置为 error 让用户手动重试
                     item.status = 'error';
@@ -1768,8 +2116,8 @@ window.onerror = function(msg, src, line, col, err) {
             retryBtn.className = 'btn-retry';
             retryBtn.textContent = '重新生成';
             retryBtn.addEventListener('click', () => {
-                const key = getApiKey();
-                if (!key) { toast('请先设置 API Key', 'error'); return; }
+                const key = getImageApiKey();
+                if (!key) { toast('请先在首页设置对应平台的 API Key', 'error'); return; }
                 item.status = 'pending'; item.taskId = null; item.resultUrl = null;
                 item.resultB64 = null; item.error = null;
                 refreshGenCard(idx);
@@ -1795,6 +2143,8 @@ window.onerror = function(msg, src, line, col, err) {
     // 提交生成任务
     async function generateOne(idx, apiKey) {
         const item = genItems[idx];
+        const platform = getSelectedPlatform();
+        item.platform = platform;
         item.status = 'generating';
         refreshGenCard(idx);
 
@@ -1805,22 +2155,43 @@ window.onerror = function(msg, src, line, col, err) {
             const resp = await fetch(BACKEND + '/api/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ apiKey, imageSrc })
+                body: JSON.stringify({ apiKey, imageSrc, platform })
             });
             const data = await resp.json();
             if (!resp.ok || data.error) {
                 throw new Error(data.error?.message || data.error || '提交失败');
             }
-            // 获取 task_id
+            // 获取 task_id（后端已做格式统一）
             const taskId = data.data?.[0]?.task_id;
             if (!taskId) throw new Error('未获取到任务 ID');
             item.taskId = taskId;
+
+            // OneAPI 同步模式：task_id 含图片 URL，无需轮询
+            if (taskId.startsWith('oneapi_done__')) {
+                const imgUrl = taskId.replace('oneapi_done__', '');
+                item.resultUrl = imgUrl;
+                try {
+                    const proxyUrl = imgUrl.startsWith('data:') ? imgUrl : BACKEND + '/proxy?url=' + encodeURIComponent(imgUrl);
+                    const imgResp = await fetch(proxyUrl);
+                    const blob = await imgResp.blob();
+                    item.resultB64 = await new Promise(resolve => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result);
+                        reader.readAsDataURL(blob);
+                    });
+                } catch { /* URL fallback */ }
+                item.status = 'done';
+                refreshGenCard(idx);
+                saveAppState();
+                return;
+            }
+
             item.status = 'polling';
             refreshGenCard(idx);
             saveAppState();
 
             // 轮询任务状态
-            await pollTask(idx, apiKey);
+            await pollTask(idx, apiKey, platform);
         } catch (e) {
             item.status = 'error';
             item.error = e.message;
@@ -1830,13 +2201,14 @@ window.onerror = function(msg, src, line, col, err) {
         updateProgress();
     }
 
-    async function pollTask(idx, apiKey) {
+    async function pollTask(idx, apiKey, platform) {
         const item = genItems[idx];
+        platform = platform || item.platform || 'apimart';
         const maxAttempts = 120;  // 最多等待约 4 分钟
         for (let i = 0; i < maxAttempts; i++) {
             await new Promise(r => setTimeout(r, 2000));
             try {
-                const resp = await fetch(BACKEND + '/api/task/' + item.taskId + '?apiKey=' + encodeURIComponent(apiKey));
+                const resp = await fetch(BACKEND + '/api/task/' + item.taskId + '?apiKey=' + encodeURIComponent(apiKey) + '&platform=' + platform);
                 const data = await resp.json();
                 console.log('[pollTask] raw response:', JSON.stringify(data).slice(0, 800));
                 // 从响应中多层查找 status（兼容 {status,data:{images}} 和 {data:{status,result:{images}}} 两种结构）
@@ -1905,8 +2277,8 @@ window.onerror = function(msg, src, line, col, err) {
     // 失败重新生成
     const genRetryFailedBtn = document.getElementById('genRetryFailedBtn');
     genRetryFailedBtn.addEventListener('click', async () => {
-        const apiKey = getApiKey();
-        if (!apiKey) { toast('请先设置 API Key', 'error'); return; }
+        const apiKey = getImageApiKey();
+        if (!apiKey) { toast('请先在首页设置对应平台的 API Key', 'error'); return; }
         const failedIndices = [];
         genItems.forEach((item, idx) => {
             if (item.status === 'error') {
@@ -1946,8 +2318,8 @@ window.onerror = function(msg, src, line, col, err) {
     });
 
     genAllBtn.addEventListener('click', async () => {
-        const apiKey = getApiKey();
-        if (!apiKey) { toast('请先设置 API Key', 'error'); return; }
+        const apiKey = getImageApiKey();
+        if (!apiKey) { toast('请先在首页设置对应平台的 API Key', 'error'); return; }
 
         isGenerating = true;
         genAllBtn.disabled = true;
@@ -2020,6 +2392,28 @@ window.onerror = function(msg, src, line, col, err) {
     const downloadRenamedBtn = document.getElementById('downloadRenamedBtn');
 
     backToP2Btn.addEventListener('click', () => showPage(2));
+
+    // 第三步：直接上传填色页
+    const p3UploadBtn = document.getElementById('p3UploadBtn');
+    const p3FileInput = document.getElementById('p3FileInput');
+    p3UploadBtn.addEventListener('click', () => p3FileInput.click());
+    p3FileInput.addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files);
+        if (!files.length) return;
+        for (const f of files) {
+            const b64 = await new Promise(resolve => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(f);
+            });
+            renameItems.push({ imgB64: b64, oldName: f.name.replace(/\.[^.]+$/, ''), newName: '' });
+        }
+        e.target.value = '';
+        renderRenameCards();
+        updateRenameToolbar();
+        downloadRenamedBtn.style.display = renameItems.some(r => r.newName) ? 'inline-block' : 'none';
+        toast(`已上传 ${files.length} 张填色页`, 'success');
+    });
 
     const renameToolbar = document.getElementById('renameToolbar');
     const renameTotalCount = document.getElementById('renameTotalCount');
@@ -2143,7 +2537,7 @@ window.onerror = function(msg, src, line, col, err) {
         const theme = themeInput.value.trim();
         if (!theme) { toast('请输入主题词', 'error'); return; }
         const apiKey = getApiKey();
-        if (!apiKey) { toast('请先在第二步设置 API Key', 'error'); return; }
+        if (!apiKey) { toast('请先在首页设置 API Key', 'error'); return; }
         if (renameItems.length === 0) { toast('没有可重命名的图片', 'error'); return; }
 
         startRenameBtn.disabled = true;
@@ -2366,11 +2760,60 @@ window.onerror = function(msg, src, line, col, err) {
     });
 
     /* ═══════════════ 首页工具导航 ═══════════════ */
+    /* ═══════════════ 全局 API Key 管理 ═══════════════ */
+    const apimartKeyInput = document.getElementById('apimartKeyInput');
+    const apimartSaveBtn = document.getElementById('apimartSaveBtn');
+    const apimartKeyOk = document.getElementById('apimartKeyOk');
+    const kieKeyInput = document.getElementById('kieKeyInput');
+    const kieSaveBtn = document.getElementById('kieSaveBtn');
+    const kieKeyOk = document.getElementById('kieKeyOk');
+    const oneapiKeyInput = document.getElementById('oneapiKeyInput');
+    const oneapiSaveBtn = document.getElementById('oneapiSaveBtn');
+    const oneapiKeyOk = document.getElementById('oneapiKeyOk');
+
+    (function initGlobalApiKey() {
+        const savedApimart = sessionStorage.getItem('apimart_api_key');
+        if (savedApimart) { apimartKeyInput.value = savedApimart; apimartKeyOk.style.display = ''; }
+        const savedKie = sessionStorage.getItem('kie_api_key');
+        if (savedKie) { kieKeyInput.value = savedKie; kieKeyOk.style.display = ''; }
+        const savedOneapi = sessionStorage.getItem('oneapi_api_key');
+        if (savedOneapi) { oneapiKeyInput.value = savedOneapi; oneapiKeyOk.style.display = ''; }
+
+        apimartSaveBtn.addEventListener('click', () => {
+            const key = apimartKeyInput.value.trim();
+            if (!key) { toast('请输入 Apimart API Key', 'error'); return; }
+            sessionStorage.setItem('apimart_api_key', key);
+            apimartKeyOk.style.display = '';
+            toast('Apimart API Key 已保存', 'success');
+        });
+        apimartKeyInput.addEventListener('input', () => { apimartKeyOk.style.display = 'none'; });
+
+        kieSaveBtn.addEventListener('click', () => {
+            const key = kieKeyInput.value.trim();
+            if (!key) { toast('请输入 KIE.ai API Key', 'error'); return; }
+            sessionStorage.setItem('kie_api_key', key);
+            kieKeyOk.style.display = '';
+            toast('KIE.ai API Key 已保存', 'success');
+        });
+        kieKeyInput.addEventListener('input', () => { kieKeyOk.style.display = 'none'; });
+
+        oneapiSaveBtn.addEventListener('click', () => {
+            const key = oneapiKeyInput.value.trim();
+            if (!key) { toast('请输入 OneAPI API Key', 'error'); return; }
+            sessionStorage.setItem('oneapi_api_key', key);
+            oneapiKeyOk.style.display = '';
+            toast('OneAPI API Key 已保存', 'success');
+        });
+        oneapiKeyInput.addEventListener('input', () => { oneapiKeyOk.style.display = 'none'; });
+    })();
+
+    /* ═══════════════ 首页 / 工具切换 ═══════════════ */
     let currentTool = null;
     const homeHeader = document.getElementById('homeHeader');
     const homePage = document.getElementById('homePage');
     const coloringTool = document.getElementById('coloringTool');
     const germanTool = document.getElementById('germanTool');
+    const seoImportTool = document.getElementById('seoImportTool');
 
     function showHome() {
         currentTool = null;
@@ -2378,6 +2821,8 @@ window.onerror = function(msg, src, line, col, err) {
         homePage.style.display = '';
         coloringTool.style.display = 'none';
         germanTool.style.display = 'none';
+        seoImportTool.style.display = 'none';
+        document.getElementById('seoImgGenTool').style.display = 'none';
     }
 
     function showTool(name) {
@@ -2386,6 +2831,8 @@ window.onerror = function(msg, src, line, col, err) {
         homePage.style.display = 'none';
         coloringTool.style.display = name === 'coloring' ? '' : 'none';
         germanTool.style.display = name === 'german' ? '' : 'none';
+        seoImportTool.style.display = name === 'seo-import' ? '' : 'none';
+        document.getElementById('seoImgGenTool').style.display = 'none';
         if (name === 'coloring') showPage(currentPage);
         if (name === 'german' && Object.keys(fullDict).length === 0) loadDict();
     }
@@ -2398,6 +2845,1362 @@ window.onerror = function(msg, src, line, col, err) {
     });
     document.getElementById('coloringBackBtn').addEventListener('click', showHome);
     document.getElementById('germanBackBtn').addEventListener('click', showHome);
+    document.getElementById('seoImportBackBtn').addEventListener('click', showHome);
+
+    /* ═══════════════ SEO 系统导入工具 ═══════════════ */
+    (function initSeoImportTool() {
+
+        // ── 项目模板映射 ── iPage 使用 IP 系列组件
+        const PROJECTS = {
+            ipage: {
+                label: 'iPage',
+                templateUrl: 'seo_template_ipage.json',
+                sectionMap: {
+                    whatIs:      'IP7',
+                    whyChooseUs: 'IP1',
+                    showcase:    'IP6',
+                    features:    'IP9',
+                    faq:         'IP2',
+                    cta:         'IP8',
+                },
+            },
+        };
+
+        // IP字段映射（参考 seoFieldMapping.js）
+        const IP_FIELD_MAP = {
+            IP7: { rootFields:{ h2:'TitleName', description:'DescriptionName', cta:'BtnName', imageAlt:'ImgAltName' }, sectionList:null, ctaLinkField:'BtnLink', rootImgField:'ImgUrl', rootImgAltField:'ImgAltName' },
+            IP1: { rootFields:{ tag:'TagName', h2:'TitleName', description:'DescriptionName', cta:'BtnName' }, sectionList:{ arrayField:'items', itemMapping:{ title:'ItemTitleName', description:'ItemDescriptionName' } }, ctaLinkField:'BtnLink' },
+            IP6: { rootFields:{ tag:'TagName', h2:'TitleName', description:'DescriptionName', cta:'BtnName' }, sectionList:{ arrayField:'items', itemMapping:{ title:'ItemTitleName', description:'ItemDescriptionName', imageAlt:'ItemImgAlt' }, itemImgField:'ItemImgUrl', itemImgAltField:'ItemImgAlt' }, ctaLinkField:'BtnLink' },
+            IP9: { rootFields:{}, sectionList:{ arrayField:'items', itemMapping:{ tag:'ItemTagName', title:'ItemTitleName', description:'ItemDescriptionName', description2:'ItemDescription2Name', imageAlt:'ItemImgAlt', cta:'ItemBtnName' }, itemCtaLinkField:'ItemBtnLink', itemImgField:'ItemImgUrl', itemImgAltField:'ItemImgAlt' } },
+            IP2: { rootFields:{ tag:'TagName', h2:'TitleName', description:'DescriptionName' }, sectionList:{ arrayField:'items', itemMapping:{ question:'ItemQuestionName', answer:'ItemAnswerName' } } },
+            IP8: { rootFields:{ headline:'TitleName', description:'DescriptionName', cta:'BtnName' }, sectionList:null, ctaLinkField:'BtnLink' },
+        };
+
+        // 每个 section 映射的 IP 组件
+        const SECTION_IP_OPTIONS = {
+            whatIs:      ['IP7'],
+            whyChooseUs: ['IP1'],
+            showcase:    ['IP6'],
+            features:    ['IP9'],
+            faq:         ['IP2'],
+            cta:         ['IP8'],
+        };
+
+        // 从已加载的模板 JSON 中提取某个 IP 组件的预览数据
+        function extractModulePreview(ipComp) {
+            if (!loadedTemplate || !loadedTemplate.modules) return null;
+            const mod = loadedTemplate.modules.find(m => m.component === ipComp);
+            if (!mod) return null;
+            const cfg = mod.config;
+            const preview = { component: ipComp, title: cfg.TitleName || cfg.TagName || '', description: cfg.DescriptionName || '' };
+            // 根级图片
+            if (cfg.ImgUrl) preview.heroImg = cfg.ImgUrl;
+            // CTA 按钮
+            if (cfg.BtnName) preview.btn = cfg.BtnName;
+            // 子项列表
+            if (cfg.sectionList && cfg.sectionList.length > 0) {
+                preview.items = cfg.sectionList.slice(0, 4).map(item => ({
+                    title: item.ItemTitleName || item.ItemQuestionName || '',
+                    desc: item.ItemDescriptionName || item.ItemAnswerName || '',
+                    img: item.ItemImgUrl || null,
+                    hasSvg: !!item.ItemSvgName,
+                    isQA: !!item.ItemQuestionName,
+                }));
+                preview.totalItems = cfg.sectionList.length;
+            }
+            return preview;
+        }
+
+        // 渲染 IP 模块的迷你样式预览卡片
+        function renderModulePreviewCard(ipComp) {
+            const p = extractModulePreview(ipComp);
+            if (!p) return null;
+            const card = document.createElement('div');
+            card.className = 'seo-module-card';
+            // 头部
+            card.innerHTML = '<div class="mc-header">📐 映射到: <span class="mc-badge">' + p.component + '</span></div>';
+            const layout = document.createElement('div');
+            layout.className = 'mc-layout';
+
+            if (p.heroImg) {
+                // IP7 样式：大图 + 文字 + 按钮
+                const img = document.createElement('img');
+                img.className = 'mc-hero-img'; img.src = p.heroImg; img.alt = p.component; img.loading = 'lazy';
+                layout.appendChild(img);
+                const tb = document.createElement('div');
+                tb.className = 'mc-text-block';
+                tb.innerHTML = '<div class="mc-title">' + _esc(p.title) + '</div>' + _esc(_trunc(p.description, 60));
+                layout.appendChild(tb);
+                if (p.btn) { const b = document.createElement('span'); b.className = 'mc-btn-mock'; b.textContent = p.btn; layout.appendChild(b); }
+            } else if (p.items && p.items[0] && p.items[0].isQA) {
+                // IP2 FAQ 样式
+                const tb = document.createElement('div');
+                tb.className = 'mc-text-block';
+                tb.innerHTML = '<div class="mc-title">' + _esc(p.title) + '</div>' + _esc(_trunc(p.description, 50));
+                layout.appendChild(tb);
+                p.items.forEach(item => {
+                    const q = document.createElement('div');
+                    q.className = 'mc-faq-item';
+                    q.innerHTML = '<strong>Q: </strong>' + _esc(_trunc(item.title, 40));
+                    layout.appendChild(q);
+                });
+                if (p.totalItems > 4) { const more = document.createElement('div'); more.style.cssText = 'font-size:10px;color:#94a3b8;text-align:center'; more.textContent = '... 共 ' + p.totalItems + ' 条'; layout.appendChild(more); }
+            } else if (p.items && p.items[0] && p.items[0].img) {
+                // IP6/IP9 样式：卡片+图片
+                const tb = document.createElement('div');
+                tb.className = 'mc-text-block';
+                if (p.title) tb.innerHTML = '<div class="mc-title">' + _esc(p.title) + '</div>';
+                if (p.description) tb.innerHTML += _esc(_trunc(p.description, 50));
+                if (p.title || p.description) layout.appendChild(tb);
+                // 检查是 IP9 交替布局还是 IP6 网格
+                const isAlt = ipComp === 'IP9';
+                if (isAlt) {
+                    p.items.forEach(item => {
+                        const row = document.createElement('div');
+                        row.className = 'mc-alt-row';
+                        const img = document.createElement('img');
+                        img.src = item.img; img.alt = item.title; img.loading = 'lazy';
+                        const txt = document.createElement('div');
+                        txt.className = 'mc-text-block';
+                        txt.innerHTML = '<div class="mc-title">' + _esc(_trunc(item.title, 30)) + '</div>' + _esc(_trunc(item.desc, 40));
+                        row.appendChild(img); row.appendChild(txt);
+                        layout.appendChild(row);
+                    });
+                } else {
+                    const grid = document.createElement('div');
+                    grid.className = 'mc-grid';
+                    grid.style.gridTemplateColumns = 'repeat(' + Math.min(p.items.length, 3) + ', 1fr)';
+                    p.items.forEach(item => {
+                        const gi = document.createElement('div');
+                        gi.className = 'mc-grid-item';
+                        const img = document.createElement('img');
+                        img.src = item.img; img.alt = item.title; img.loading = 'lazy';
+                        gi.appendChild(img);
+                        const t = document.createElement('span'); t.className = 'mc-item-title'; t.textContent = item.title;
+                        gi.appendChild(t);
+                        grid.appendChild(gi);
+                    });
+                    layout.appendChild(grid);
+                    if (p.totalItems > 4) { const more = document.createElement('div'); more.style.cssText = 'font-size:10px;color:#94a3b8;text-align:center'; more.textContent = '... 共 ' + p.totalItems + ' 项'; layout.appendChild(more); }
+                }
+                if (p.btn) { const b = document.createElement('span'); b.className = 'mc-btn-mock'; b.textContent = p.btn; layout.appendChild(b); }
+            } else if (p.items && p.items[0] && p.items[0].hasSvg) {
+                // IP1 样式：文字卡片（无图标）
+                const tb = document.createElement('div');
+                tb.className = 'mc-text-block';
+                tb.innerHTML = '<div class="mc-title">' + _esc(p.title) + '</div>' + _esc(_trunc(p.description, 50));
+                layout.appendChild(tb);
+                const grid = document.createElement('div');
+                grid.className = 'mc-grid';
+                grid.style.gridTemplateColumns = 'repeat(' + Math.min(p.items.length, 3) + ', 1fr)';
+                p.items.forEach(item => {
+                    const gi = document.createElement('div');
+                    gi.className = 'mc-grid-item';
+                    const t = document.createElement('span'); t.className = 'mc-item-title'; t.textContent = item.title;
+                    gi.appendChild(t);
+                    grid.appendChild(gi);
+                });
+                layout.appendChild(grid);
+                if (p.btn) { const b = document.createElement('span'); b.className = 'mc-btn-mock'; b.textContent = p.btn; layout.appendChild(b); }
+            } else {
+                // IP8 CTA 样式
+                const tb = document.createElement('div');
+                tb.className = 'mc-text-block';
+                if (p.title) tb.innerHTML = '<div class="mc-title">' + _esc(p.title) + '</div>';
+                if (p.description) tb.innerHTML += _esc(_trunc(p.description, 60));
+                layout.appendChild(tb);
+                if (p.btn) { const b = document.createElement('span'); b.className = 'mc-btn-mock'; b.textContent = p.btn; layout.appendChild(b); }
+            }
+
+            card.appendChild(layout);
+            return card;
+        }
+        function _esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+        function _trunc(s, n) { return (s || '').length > n ? s.slice(0, n) + '…' : (s || ''); }
+
+        const SECTION_DEFAULTS = [
+            { id: 'whatIs',      label: 'What Is (IP7)',        active: true },
+            { id: 'whyChooseUs', label: 'Why Choose Us (IP1)',  active: true, options: { count: 3, max: 9 } },
+            { id: 'showcase',    label: 'Showcase (IP6)',       active: true, options: { count: 6, max: 9 } },
+            { id: 'features',    label: 'Features (IP9)',       active: true, options: { count: 2, max: 9 } },
+            { id: 'faq',         label: 'FAQ (IP2)',            active: true, options: { count: 5, max: 9 } },
+            { id: 'cta',         label: 'CTA (IP8)',            active: true },
+        ];
+
+        // ── 工具函数 ──
+        function capitalizeWords(str) {
+            if (!str || !str.trim()) return str;
+            return str.replace(/\b\w/g, c => c.toUpperCase());
+        }
+
+        function extractTextFromJSON(data) {
+            if (typeof data === 'string') { try { data = JSON.parse(data); } catch { return data; } }
+            const parts = [];
+            (function extract(obj) {
+                if (typeof obj === 'string') { if (obj.trim()) parts.push(obj.trim()); return; }
+                if (Array.isArray(obj)) { obj.forEach(extract); return; }
+                if (typeof obj === 'object' && obj !== null) { Object.values(obj).forEach(extract); }
+            })(data);
+            return parts.join(' ');
+        }
+
+        function calculateKeywordDensity(allText, coreKeyword, secondaryKeywordsRaw, coreTarget, secTarget) {
+            const matches = allText.match(/[a-zA-Z0-9_-]+|[\u4e00-\u9fa5]/g) || [];
+            const totalWords = matches.length;
+            const keywordList = [];
+            if (coreKeyword.trim()) keywordList.push({ word: coreKeyword.trim(), type: 'core' });
+            const secWords = secondaryKeywordsRaw.split('\n').map(k => k.trim()).filter(Boolean);
+            secWords.forEach(k => keywordList.push({ word: k, type: 'secondary' }));
+            const lowerText = allText.toLowerCase();
+            let secTotalCount = 0;
+            const densityData = keywordList.map(item => {
+                let count = 0, pos = 0;
+                const lw = item.word.toLowerCase();
+                while (true) { const f = lowerText.indexOf(lw, pos); if (f === -1) break; count++; pos = f + 1; }
+                const density = totalWords > 0 ? ((count / totalWords) * 100).toFixed(2) : 0;
+                let status = '合适';
+                if (item.type === 'core') {
+                    if (density < coreTarget - 0.5) status = '偏低';
+                    else if (density > coreTarget + 0.5) status = '偏高';
+                } else {
+                    secTotalCount += count;
+                    status = density > 0 ? '已覆盖' : '未出现';
+                }
+                return { keyword: item.word, type: item.type === 'core' ? '核心' : '次要', count, density, status };
+            });
+            // 次要关键词总密度
+            const secTotalDensity = totalWords > 0 ? ((secTotalCount / totalWords) * 100).toFixed(2) : 0;
+            let secTotalStatus = '合适';
+            if (secTotalDensity < secTarget - 0.5) secTotalStatus = '偏低';
+            else if (secTotalDensity > secTarget + 0.5) secTotalStatus = '偏高';
+            return { totalWords, densityData, secTotalCount, secTotalDensity, secTotalStatus };
+        }
+
+        function normalizeContent(raw) {
+            if (typeof raw === 'string') { try { return JSON.parse(raw); } catch { return raw; } }
+            return raw;
+        }
+
+        function getSeoCharLength(str) {
+            if (!str) return 0;
+            let len = 0;
+            for (const c of str) { len += /[\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef]/.test(c) ? 2 : 1; }
+            return len;
+        }
+
+        // ── 状态 ──
+        let seoSections = JSON.parse(JSON.stringify(SECTION_DEFAULTS));
+        let generatedCopy = null;
+        let selectedModel = 'gemini-3.1-pro-preview-apimart';
+        let styleMimicMode = 'balanced';
+        let loadedTemplate = null;
+        let currentProject = 'ipage';
+
+        // 获取 DOM 元素
+        const seoCorKw = document.getElementById('seoCoreKeyword');
+        const seoSecKw = document.getElementById('seoSecondaryKeywords');
+        const seoCtaUrlDiv = document.getElementById('seoCtaUrl');
+        const seoBrandInput = document.getElementById('seoBrandName');
+
+        // ── 核心关键词 → Title Case + 自动 CTA URL ──
+        function getCtaUrl() {
+            const kw = seoCorKw.value.trim();
+            return kw ? '/' + kw.toLowerCase().replace(/\s+/g, '-') : '';
+        }
+
+        seoCorKw.addEventListener('blur', function() {
+            const val = capitalizeWords(seoCorKw.value);
+            seoCorKw.value = val;
+            const url = getCtaUrl();
+            seoCtaUrlDiv.textContent = url || '';
+            if (!url) seoCtaUrlDiv.innerHTML = '<em>输入核心关键词后自动生成</em>';
+        });
+        seoCorKw.addEventListener('input', function() {
+            const url = getCtaUrl();
+            seoCtaUrlDiv.textContent = url || '';
+            if (!url) seoCtaUrlDiv.innerHTML = '<em>输入核心关键词后自动生成</em>';
+        });
+
+        // 次要关键词 blur → Title Case
+        seoSecKw.addEventListener('blur', function() {
+            seoSecKw.value = seoSecKw.value.split('\n').map(capitalizeWords).join('\n');
+        });
+
+        // ── 风格面板 ──
+        document.getElementById('seoStyleToggle').addEventListener('click', function() {
+            const body = document.getElementById('seoStyleBody');
+            const arrow = document.getElementById('seoStyleArrow');
+            const show = body.style.display === 'none';
+            body.style.display = show ? '' : 'none';
+            arrow.textContent = show ? '▲' : '▼';
+        });
+        document.getElementById('seoStyleMode').querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                styleMimicMode = btn.dataset.mode;
+                document.getElementById('seoStyleMode').querySelectorAll('button').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const hints = { light: '轻度借鉴句子结构', balanced: '借鉴句法、语气与叙事组织，但保持品牌差异', strong: '强力模仿风格、节奏和表达结构' };
+                document.getElementById('seoStyleModeHint').textContent = hints[styleMimicMode] || '';
+            });
+        });
+
+        // ── 模型选择 ──
+        document.getElementById('seoModelTabs').querySelectorAll('.seo-model-tab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                selectedModel = btn.dataset.model;
+                document.getElementById('seoModelTabs').querySelectorAll('.seo-model-tab').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
+        // ── Section 拖拽 + 勾选列表 ──
+        let dragItem = null;
+        let dragOverIdx = null;
+
+        function renderSectionList() {
+            const el = document.getElementById('seoSectionList');
+            el.innerHTML = '';
+            seoSections.forEach((sec, idx) => {
+                const div = document.createElement('div');
+                div.className = 'seo-section-item';
+                div.draggable = true;
+                div.dataset.idx = idx;
+
+                // drag events
+                div.addEventListener('dragstart', e => { dragItem = idx; e.dataTransfer.effectAllowed = 'move'; });
+                div.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; dragOverIdx = idx; div.classList.add('drag-over'); });
+                div.addEventListener('dragleave', () => { div.classList.remove('drag-over'); });
+                div.addEventListener('drop', e => {
+                    e.preventDefault();
+                    div.classList.remove('drag-over');
+                    if (dragItem === null || dragItem === idx) return;
+                    const items = [...seoSections];
+                    const [removed] = items.splice(dragItem, 1);
+                    items.splice(idx, 0, removed);
+                    seoSections = items;
+                    renderSectionList();
+                    dragItem = null; dragOverIdx = null;
+                });
+                div.addEventListener('dragend', () => { dragItem = null; dragOverIdx = null; el.querySelectorAll('.drag-over').forEach(d => d.classList.remove('drag-over')); });
+
+                const row = document.createElement('div');
+                row.className = 'seo-section-row';
+
+                // drag handle
+                const handle = document.createElement('span');
+                handle.className = 'seo-drag-handle';
+                handle.textContent = '⠿';
+                row.appendChild(handle);
+
+                // checkbox
+                const cb = document.createElement('input');
+                cb.type = 'checkbox'; cb.checked = sec.active;
+                cb.addEventListener('change', () => { seoSections[idx].active = cb.checked; });
+                row.appendChild(cb);
+
+                // label
+                const lbl = document.createElement('span');
+                lbl.className = 'seo-section-label';
+                lbl.textContent = sec.label;
+                row.appendChild(lbl);
+
+                // IP badge
+                const project = PROJECTS[currentProject];
+                if (project) {
+                    const ip = project.sectionMap[sec.id];
+                    if (ip) {
+                        const badge = document.createElement('span');
+                        badge.className = 'seo-section-badge';
+                        badge.textContent = ip;
+                        row.appendChild(badge);
+                    }
+                }
+
+                // count input (for sections with options)
+                if (sec.options) {
+                    const cnt = document.createElement('div');
+                    cnt.className = 'seo-section-count';
+                    cnt.innerHTML = 'Count:';
+                    const numInput = document.createElement('input');
+                    numInput.type = 'number'; numInput.min = 1; numInput.max = sec.options.max;
+                    numInput.value = sec.options.count;
+                    numInput.disabled = !sec.active;
+                    numInput.addEventListener('change', function() {
+                        let v = parseInt(numInput.value);
+                        if (isNaN(v) || v < 1) v = 1;
+                        if (v > sec.options.max) v = sec.options.max;
+                        seoSections[idx].options.count = v;
+                        numInput.value = v;
+                    });
+                    cnt.appendChild(numInput);
+                    row.appendChild(cnt);
+                }
+
+                div.appendChild(row);
+
+                // Module style preview (从模板 JSON 渲染迷你预览)
+                const ipOptions = SECTION_IP_OPTIONS[sec.id];
+                if (ipOptions && ipOptions.length > 0 && sec.active && loadedTemplate) {
+                    const ipComp = ipOptions[0];
+                    const previewCard = renderModulePreviewCard(ipComp);
+                    if (previewCard) div.appendChild(previewCard);
+                }
+
+
+
+                el.appendChild(div);
+            });
+        }
+
+        // ── 加载项目模板 ──
+        async function loadProjectTemplate(projectKey) {
+            const project = PROJECTS[projectKey];
+            if (!project) return;
+            try {
+                const resp = await fetch(project.templateUrl);
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                loadedTemplate = await resp.json();
+                currentProject = projectKey;
+            } catch (e) {
+                console.warn('模板加载失败:', e.message);
+                loadedTemplate = null;
+            }
+        }
+
+        document.getElementById('seoProject').addEventListener('change', async function() {
+            currentProject = this.value;
+            await loadProjectTemplate(currentProject);
+            renderSectionList();
+        });
+
+        // ── 填充模板 ──
+        function fillTemplate(aiContent, template, ctaUrl) {
+            const result = { modules: [] };
+            const project = PROJECTS[currentProject];
+            if (!project) return result;
+            const activeSections = seoSections.filter(s => s.active);
+            activeSections.forEach(sec => {
+                const ipComp = project.sectionMap[sec.id];
+                const content = normalizeContent(aiContent[sec.id]);
+                if (!ipComp || !content) return;
+                const tmplMod = template.modules.find(m => m.component === ipComp);
+                if (!tmplMod) return;
+                const mod = JSON.parse(JSON.stringify(tmplMod));
+                const fieldMap = IP_FIELD_MAP[ipComp];
+                if (!fieldMap) return;
+                const cfg = mod.config;
+
+                Object.entries(fieldMap.rootFields).forEach(([aiKey, seoKey]) => {
+                    if (content[aiKey] !== undefined) cfg[seoKey] = content[aiKey];
+                });
+
+                if (ctaUrl && fieldMap.ctaLinkField && cfg[fieldMap.ctaLinkField] !== undefined) {
+                    cfg[fieldMap.ctaLinkField] = ctaUrl;
+                }
+
+                // 填入图片 Alt（从 AI 生成的 content.imageAlt）
+                if (fieldMap.rootImgAltField && content.imageAlt) {
+                    cfg[fieldMap.rootImgAltField] = content.imageAlt;
+                }
+
+                if (fieldMap.sectionList && cfg.sectionList) {
+                    const { arrayField, itemMapping, itemCtaLinkField, itemImgField, itemImgAltField } = fieldMap.sectionList;
+                    const aiArr = content[arrayField];
+                    if (Array.isArray(aiArr) && aiArr.length > 0) {
+                        while (cfg.sectionList.length < aiArr.length) {
+                            cfg.sectionList.push(JSON.parse(JSON.stringify(cfg.sectionList[cfg.sectionList.length - 1])));
+                        }
+                        aiArr.forEach((aiItem, i) => {
+                            const seoItem = cfg.sectionList[i];
+                            Object.entries(itemMapping).forEach(([ak, sk]) => {
+                                if (aiItem[ak] !== undefined) seoItem[sk] = aiItem[ak];
+                            });
+                            if (ctaUrl && itemCtaLinkField && seoItem[itemCtaLinkField] !== undefined) {
+                                seoItem[itemCtaLinkField] = ctaUrl;
+                            }
+                            // 填入子项图片 Alt（从 AI 生成）
+                            if (itemImgAltField && aiItem.imageAlt) {
+                                seoItem[itemImgAltField] = aiItem.imageAlt;
+                            }
+                        });
+                        cfg.sectionList = cfg.sectionList.slice(0, aiArr.length);
+                    }
+                }
+
+                result.modules.push(mod);
+            });
+            return result;
+        }
+
+        // ── 渲染结果 ──
+        function renderResults(aiContent) {
+            const body = document.getElementById('seoResultBody');
+            body.innerHTML = '';
+
+            // SEO Metadata 卡片
+            if (aiContent.seo_metadata) {
+                body.appendChild(buildResultCard('seo_metadata', '🔍 SEO Metadata', aiContent.seo_metadata, true));
+            }
+
+            // 内容卡片
+            const activeSections = seoSections.filter(s => s.active);
+            activeSections.forEach(sec => {
+                const raw = aiContent[sec.id];
+                if (!raw) return;
+                body.appendChild(buildResultCard(sec.id, sec.label, raw, false));
+            });
+
+            document.getElementById('seoDensityBtn').disabled = false;
+            document.getElementById('seoCopyAllBtn').disabled = false;
+        }
+
+        function buildResultCard(id, title, raw, isMeta) {
+            const content = normalizeContent(raw);
+            const card = document.createElement('div');
+            card.className = 'seo-result-card' + (isMeta ? ' meta' : '');
+            card.dataset.sectionId = id;
+
+            // header
+            const header = document.createElement('div');
+            header.className = 'seo-result-header';
+            const titleEl = document.createElement('span');
+            titleEl.className = 'seo-result-title';
+            titleEl.textContent = title;
+            header.appendChild(titleEl);
+
+            const actions = document.createElement('div');
+            actions.className = 'seo-result-actions';
+
+            // 检查字数 (metadata only)
+            if (id === 'seo_metadata') {
+                const checkBtn = document.createElement('button');
+                checkBtn.textContent = '📏 检查字数';
+                checkBtn.addEventListener('click', () => {
+                    let titleStr = '', desc = '';
+                    try {
+                        const obj = typeof content === 'object' ? content : JSON.parse(JSON.stringify(content));
+                        if (obj.title) titleStr = obj.title;
+                        if (obj.description) desc = obj.description;
+                    } catch {}
+                    let existing = card.querySelector('.seo-meta-check');
+                    if (existing) existing.remove();
+                    const info = document.createElement('div');
+                    info.className = 'seo-meta-check';
+                    const tLen = getSeoCharLength(titleStr);
+                    const dLen = getSeoCharLength(desc);
+                    info.innerHTML =
+                        '<div>Title: <strong>' + (titleStr || '<em>未识别</em>') + '</strong> — <span class="' + (tLen > 60 ? 'warn' : 'ok') + '">' + tLen + ' 字符</span></div>' +
+                        '<div style="margin-top:4px">Description: <strong>' + (desc || '<em>未识别</em>') + '</strong> — <span class="' + (dLen > 160 ? 'warn' : 'ok') + '">' + dLen + ' 字符</span></div>' +
+                        '<div style="margin-top:4px;font-size:11px;color:#94a3b8">* 推荐: Title≤60, Desc≤160</div>';
+                    card.appendChild(info);
+                });
+                actions.appendChild(checkBtn);
+            }
+
+            // 编辑按钮
+            const editBtn = document.createElement('button');
+            editBtn.textContent = '✏️ 编辑';
+            editBtn.addEventListener('click', () => {
+                const contentDiv = card.querySelector('.seo-result-content');
+                if (!contentDiv) return;
+                const existing = card.querySelector('.seo-result-edit');
+                if (existing) { existing.remove(); contentDiv.style.display = ''; editBtn.textContent = '✏️ 编辑'; return; }
+                contentDiv.style.display = 'none';
+                editBtn.textContent = '❌ 取消';
+                const editBox = document.createElement('div');
+                editBox.className = 'seo-result-edit';
+                const ta = document.createElement('textarea');
+                ta.value = typeof content === 'object' ? JSON.stringify(content, null, 2) : String(content);
+                editBox.appendChild(ta);
+                const saveBtn = document.createElement('button');
+                saveBtn.textContent = '💾 保存';
+                saveBtn.style.cssText = 'margin-top:6px;background:#4f46e5;color:#fff;border:none;padding:4px 14px;border-radius:6px;font-size:12px;cursor:pointer';
+                saveBtn.addEventListener('click', () => {
+                    let parsed = ta.value;
+                    try { parsed = JSON.parse(ta.value.replace(/```json\s*|\s*```/g, '').trim()); } catch {}
+                    generatedCopy[id] = parsed;
+                    editBox.remove();
+                    contentDiv.style.display = '';
+                    editBtn.textContent = '✏️ 编辑';
+                    contentDiv.textContent = typeof parsed === 'object' ? JSON.stringify(parsed, null, 2) : String(parsed);
+                    toast('已保存', 'success');
+                });
+                editBox.appendChild(saveBtn);
+                card.insertBefore(editBox, contentDiv.nextSibling);
+            });
+            actions.appendChild(editBtn);
+
+            // 重写按钮
+            const rwBtn = document.createElement('button');
+            rwBtn.textContent = '🔄 重写';
+            rwBtn.addEventListener('click', () => {
+                let existing = card.querySelector('.seo-rewrite-box');
+                if (existing) { existing.remove(); return; }
+                const box = document.createElement('div');
+                box.className = 'seo-rewrite-box';
+                const ta = document.createElement('textarea');
+                ta.rows = 2; ta.placeholder = '例如：语气更专业一点...';
+                box.appendChild(ta);
+                const btns = document.createElement('div');
+                btns.className = 'seo-rw-btns';
+                const cancelBtn = document.createElement('button');
+                cancelBtn.textContent = '取消';
+                cancelBtn.addEventListener('click', () => box.remove());
+                const confirmBtn = document.createElement('button');
+                confirmBtn.className = 'primary';
+                confirmBtn.textContent = '✨ 确认重写';
+                confirmBtn.addEventListener('click', async () => {
+                    const prompt = ta.value.trim();
+                    if (!prompt) { toast('请输入修改要求', 'error'); return; }
+                    confirmBtn.disabled = true; confirmBtn.textContent = '⏳ 重写中...';
+                    try {
+                        await rewriteSection(id, prompt);
+                        box.remove();
+                    } catch (e) {
+                        toast('重写失败: ' + e.message, 'error');
+                    } finally {
+                        confirmBtn.disabled = false; confirmBtn.textContent = '✨ 确认重写';
+                    }
+                });
+                btns.appendChild(cancelBtn);
+                btns.appendChild(confirmBtn);
+                box.appendChild(btns);
+                header.after(box);
+            });
+            actions.appendChild(rwBtn);
+
+            // 复制按钮
+            const copyBtn = document.createElement('button');
+            copyBtn.textContent = '📋 复制';
+            copyBtn.addEventListener('click', () => {
+                const text = typeof content === 'object' ? JSON.stringify(content, null, 2) : String(content);
+                navigator.clipboard.writeText(text).then(() => toast('已复制', 'success')).catch(() => toast('复制失败', 'error'));
+            });
+            actions.appendChild(copyBtn);
+
+            header.appendChild(actions);
+            card.appendChild(header);
+
+            // content body
+            const pre = document.createElement('div');
+            pre.className = 'seo-result-content';
+            if (typeof content === 'object' && content !== null) {
+                // Structured display
+                const entries = Object.entries(content);
+                const lines = [];
+                entries.forEach(([k, v]) => {
+                    if (Array.isArray(v)) {
+                        lines.push(k + ':');
+                        v.forEach((item, i) => {
+                            if (typeof item === 'object' && item !== null) {
+                                lines.push('  ' + (i + 1) + '. ' + Object.entries(item).map(([ik, iv]) => ik + ': ' + iv).join(' | '));
+                            } else {
+                                lines.push('  ' + (i + 1) + '. ' + String(item));
+                            }
+                        });
+                    } else if (typeof v === 'object' && v !== null) {
+                        lines.push(k + ': ' + Object.values(v).join(' — '));
+                    } else {
+                        lines.push(k + ': ' + String(v));
+                    }
+                });
+                pre.textContent = lines.join('\n');
+            } else {
+                pre.textContent = String(content || '【文案缺失或生成失败】');
+            }
+            card.appendChild(pre);
+
+            return card;
+        }
+
+        // ── 重写 section ──
+        async function rewriteSection(sectionId, rewritePrompt) {
+            const apiKey = getApiKey();
+            if (!apiKey) throw new Error('请先在首页设置 API Key');
+            const sec = seoSections.find(s => s.id === sectionId) || (sectionId === 'seo_metadata' ? { id: 'seo_metadata', label: 'SEO Metadata' } : null);
+            if (!sec) throw new Error('Section 不存在');
+            let cp = (document.getElementById('seoCustomPrompt').value || '').trim();
+            cp = '【重写指令】针对 ' + (sec.label || sectionId) + ' 进行修改：' + rewritePrompt + '。' + (cp ? ' (原有要求：' + cp + ')' : '');
+            const alwaysAltIds = ['showcase', 'features', 'whatIs'];
+            const payload = {
+                apiKey,
+                coreKeyword: seoCorKw.value.trim(),
+                secondaryKeywords: seoSecKw.value.trim().replace(/\n/g, ', '),
+                brandName: seoBrandInput.value.trim() || 'iPage',
+                customPrompt: cp,
+                sections: [{ id: sec.id, label: sec.label || sectionId, options: sec.options || null, alt: alwaysAltIds.includes(sec.id) }],
+                densityTarget: parseFloat(document.getElementById('seoDensityTargetCore').value) || 2.0,
+                mode: 'rewrite',
+                rewriteSectionId: sectionId,
+                customRewritePrompt: rewritePrompt,
+                includeMetadata: document.getElementById('seoIncludeMetadata').checked,
+                includeBrandInTitle: document.getElementById('seoIncludeBrand').checked,
+                model: selectedModel,
+                styleReferenceUrls: getStyleUrls(),
+                styleMimicMode,
+                styleCrawlEnabled: document.getElementById('seoStyleCrawl').checked,
+            };
+            const res = await fetch(BACKEND + '/api/seo/rewrite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const response = await res.json();
+            if (!res.ok || response.error) throw new Error(response.error || 'HTTP ' + res.status);
+            const newContent = response[sectionId];
+            if (!newContent) throw new Error('重写返回内容为空');
+            generatedCopy[sectionId] = newContent;
+            renderResults(generatedCopy);
+            setStatus('✅ ' + sectionId + ' 已重写');
+            toast('重写成功', 'success');
+        }
+
+        function getStyleUrls() {
+            const raw = document.getElementById('seoStyleUrls').value.trim();
+            return raw ? raw.split('\n').map(u => u.trim()).filter(Boolean) : [];
+        }
+
+        // ── 显示服务端校验报告 ──
+        function _showValidationReport(validation) {
+            const reportDiv = document.getElementById('seoDensityReport');
+            reportDiv.style.display = '';
+            reportDiv.className = 'seo-density-report';
+            const r = validation.report || {};
+            const core = r.core || {};
+            const secDetails = r.secondary || [];
+            const secTotal = r.secondaryTotal || {};
+
+            let html = '<h4>📊 服务端关键词密度校验报告</h4>';
+            html += '<p style="font-size:12px;color:#6b7280;margin-bottom:8px">';
+            html += '自动校验次数: <strong>' + validation.attempts_used + '</strong> &nbsp;|&nbsp; ';
+            html += '总词数: <strong>' + (r.totalWords || 0) + '</strong> &nbsp;|&nbsp; ';
+            html += '最终状态: <strong style="color:' + (validation.passed ? '#16a34a' : '#dc2626') + '">' + (validation.passed ? '✅ 通过' : '❌ 未通过') + '</strong>';
+            html += '</p>';
+
+            html += '<table class="seo-density-table"><thead><tr><th>类型</th><th>关键词</th><th style="text-align:center">次数</th><th style="text-align:center">密度</th><th style="text-align:right">状态</th></tr></thead><tbody>';
+
+            // 核心关键词行
+            const coreCls = core.status === 'ok' ? 'seo-density-ok' : 'seo-density-low';
+            html += '<tr><td><span style="background:#4f46e5;color:#fff;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700">CORE</span></td>';
+            html += '<td style="font-weight:600">' + (core.keyword || '') + '</td>';
+            html += '<td style="text-align:center;font-family:monospace">' + (core.count || 0) + '</td>';
+            html += '<td style="text-align:center;font-family:monospace">' + (core.density || 0) + '%</td>';
+            html += '<td style="text-align:right" class="' + coreCls + '">' + (core.status === 'ok' ? '合适' : '偏差 (目标 ' + core.target + '%)') + '</td></tr>';
+
+            // 次要关键词行
+            secDetails.forEach(function(d) {
+                const cls = d.status === 'ok' ? 'seo-density-ok' : 'seo-density-miss';
+                html += '<tr><td><span style="background:#e2e8f0;color:#475569;padding:2px 6px;border-radius:4px;font-size:10px">SEC</span></td>';
+                html += '<td style="font-weight:600">' + d.keyword + '</td>';
+                html += '<td style="text-align:center;font-family:monospace">' + d.count + '</td>';
+                html += '<td style="text-align:center;font-family:monospace">-</td>';
+                html += '<td style="text-align:right" class="' + cls + '">' + (d.count >= 1 ? '已覆盖' : '未出现') + '</td></tr>';
+            });
+
+            // 次要总计行
+            const secCls = secTotal.status === 'ok' ? 'seo-density-ok' : 'seo-density-low';
+            html += '<tr style="border-top:2px solid #fde68a;font-weight:700"><td><span style="background:#7c3aed;color:#fff;padding:2px 6px;border-radius:4px;font-size:10px">TOTAL</span></td>';
+            html += '<td>次要关键词总计</td>';
+            html += '<td style="text-align:center;font-family:monospace">' + (secTotal.count || 0) + '</td>';
+            html += '<td style="text-align:center;font-family:monospace">' + (secTotal.density || 0) + '%</td>';
+            html += '<td style="text-align:right" class="' + secCls + '">' + (secTotal.status === 'ok' ? '合适' : '偏差') + ' (目标 ' + (secTotal.target || 0) + '%)</td></tr>';
+
+            html += '</tbody></table>';
+
+            // 问题列表
+            if (r.issues && r.issues.length > 0) {
+                html += '<div style="margin-top:10px;padding:8px 12px;background:#fef2f2;border-radius:8px;border:1px solid #fecaca">';
+                html += '<p style="font-size:12px;font-weight:700;color:#dc2626;margin-bottom:4px">⚠️ 未通过项：</p>';
+                r.issues.forEach(function(issue) {
+                    html += '<p style="font-size:12px;color:#991b1b;margin:2px 0">• ' + issue + '</p>';
+                });
+                html += '</div>';
+            }
+
+            reportDiv.innerHTML = html;
+        }
+
+        // ── 密度检查 ──
+        document.getElementById('seoDensityBtn').addEventListener('click', function() {
+            if (!generatedCopy) return;
+            let combinedText = '';
+            seoSections.filter(s => s.active).forEach(sec => {
+                const content = generatedCopy[sec.id];
+                if (content) combinedText += extractTextFromJSON(content) + ' ';
+            });
+            const coreTarget = parseFloat(document.getElementById('seoDensityTargetCore').value) || 2.0;
+            const secTarget = parseFloat(document.getElementById('seoDensityTargetSec').value) || 3.0;
+            const result = calculateKeywordDensity(combinedText, seoCorKw.value, seoSecKw.value, coreTarget, secTarget);
+            const reportDiv = document.getElementById('seoDensityReport');
+            reportDiv.style.display = '';
+            reportDiv.className = 'seo-density-report';
+            let html = '<h4>📊 关键词密度检查报告</h4>';
+            html += '<p style="font-size:12px;color:#6b7280;margin-bottom:8px">文案总词数: <strong>' + result.totalWords + '</strong> &nbsp;|&nbsp; 核心目标: <strong>' + coreTarget + '%</strong> &nbsp;|&nbsp; 次要总计目标: <strong>' + secTarget + '%</strong></p>';
+            html += '<table class="seo-density-table"><thead><tr><th>类型</th><th>关键词</th><th style="text-align:center">次数</th><th style="text-align:center">密度</th><th style="text-align:right">状态</th></tr></thead><tbody>';
+            result.densityData.forEach(d => {
+                const cls = (d.status === '合适' || d.status === '已覆盖') ? 'seo-density-ok' : d.status === '未出现' ? 'seo-density-miss' : 'seo-density-low';
+                html += '<tr><td>' + (d.type === '核心' ? '<span style="background:#4f46e5;color:#fff;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700">CORE</span>' : '<span style="background:#e2e8f0;color:#475569;padding:2px 6px;border-radius:4px;font-size:10px">SEC</span>') + '</td>';
+                html += '<td style="font-weight:600">' + d.keyword + '</td><td style="text-align:center;font-family:monospace">' + d.count + '</td><td style="text-align:center;font-family:monospace">' + d.density + '%</td>';
+                html += '<td style="text-align:right" class="' + cls + '">' + d.status + '</td></tr>';
+            });
+            // 次要关键词总计行
+            const secCls = result.secTotalStatus === '合适' ? 'seo-density-ok' : 'seo-density-low';
+            html += '<tr style="border-top:2px solid #fde68a;font-weight:700"><td><span style="background:#7c3aed;color:#fff;padding:2px 6px;border-radius:4px;font-size:10px">TOTAL</span></td>';
+            html += '<td>次要关键词总计</td><td style="text-align:center;font-family:monospace">' + result.secTotalCount + '</td><td style="text-align:center;font-family:monospace">' + result.secTotalDensity + '%</td>';
+            html += '<td style="text-align:right" class="' + secCls + '">' + result.secTotalStatus + ' (目标 ' + secTarget + '%)</td></tr>';
+            html += '</tbody></table>';
+            reportDiv.innerHTML = html;
+        });
+
+        // ── 全部复制 ──
+        function _fallbackCopy(text) {
+            try {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px';
+                document.body.appendChild(ta);
+                ta.focus();
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                toast('已复制全部文案', 'success');
+            } catch (e) {
+                toast('复制失败，请手动复制', 'error');
+            }
+        }
+        document.getElementById('seoCopyAllBtn').addEventListener('click', function() {
+            if (!generatedCopy) { toast('请先生成文案', 'error'); return; }
+            let fullText = '';
+            // Include seo_metadata if exists
+            if (generatedCopy.seo_metadata) {
+                fullText += '## SEO Metadata\n\n';
+                const meta = normalizeContent(generatedCopy.seo_metadata);
+                if (typeof meta === 'object' && meta !== null) {
+                    Object.entries(meta).forEach(([k, v]) => { fullText += k + ': ' + String(v) + '\n'; });
+                } else {
+                    fullText += String(meta) + '\n';
+                }
+            }
+            seoSections.filter(s => s.active).forEach(sec => {
+                const content = generatedCopy[sec.id];
+                if (!content) return;
+                fullText += '\n\n## ' + sec.label + '\n\n';
+                try {
+                    const c = normalizeContent(content);
+                    if (typeof c === 'object' && c !== null) {
+                        Object.entries(c).forEach(([k, v]) => {
+                            if (Array.isArray(v)) {
+                                fullText += k + ':\n';
+                                v.forEach((item, i) => {
+                                    if (typeof item === 'object' && item !== null) {
+                                        fullText += '  ' + (i + 1) + '. ' + Object.entries(item).map(([ik, iv]) => ik + ': ' + iv).join(' | ') + '\n';
+                                    } else {
+                                        fullText += '  ' + (i + 1) + '. ' + String(item) + '\n';
+                                    }
+                                });
+                            } else if (typeof v === 'object' && v !== null) {
+                                fullText += k + ': ' + Object.values(v).join(' | ') + '\n';
+                            } else {
+                                fullText += k + ': ' + String(v) + '\n';
+                            }
+                        });
+                    } else {
+                        fullText += String(c) + '\n';
+                    }
+                } catch (e) {
+                    fullText += JSON.stringify(content, null, 2) + '\n';
+                }
+            });
+            if (!fullText.trim()) { toast('文案内容为空', 'error'); return; }
+            const textToCopy = fullText.trim();
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(textToCopy)
+                    .then(() => toast('已复制全部文案', 'success'))
+                    .catch(() => _fallbackCopy(textToCopy));
+            } else {
+                _fallbackCopy(textToCopy);
+            }
+        });
+
+        // ── 生成 ──
+        document.getElementById('seoGenerateBtn').addEventListener('click', async function() {
+            const apiKey = getApiKey();
+            if (!apiKey) { showErr('请先在工具集首页设置 API Key'); return; }
+            const coreKeyword = seoCorKw.value.trim();
+            if (!coreKeyword) { showErr('请输入核心关键词'); return; }
+            const activeSections = seoSections.filter(s => s.active);
+            if (activeSections.length === 0) { showErr('请至少选择一个 Section'); return; }
+            hideErr();
+
+            const btn = document.getElementById('seoGenerateBtn');
+            btn.disabled = true; btn.textContent = '⏳ 生成中（含自动校验，最多3轮）...';
+            setStatus('生成中，含关键词密度自动校验，请稍候...');
+            document.getElementById('seoExportBtn').disabled = true;
+            document.getElementById('seoImgGenBtn').disabled = true;
+            document.getElementById('seoDensityBtn').disabled = true;
+            document.getElementById('seoCopyAllBtn').disabled = true;
+            generatedCopy = null;
+            document.getElementById('seoDensityReport').style.display = 'none';
+
+            const brandName = seoBrandInput.value.trim() || 'iPage';
+            const secondaryKeywords = seoSecKw.value.trim().replace(/\n/g, ', ');
+            const densityTarget = parseFloat(document.getElementById('seoDensityTargetCore').value) || 2.0;
+            const densityTargetSec = parseFloat(document.getElementById('seoDensityTargetSec').value) || 3.0;
+
+            const payload = {
+                apiKey,
+                coreKeyword,
+                secondaryKeywords,
+                brandName,
+                customPrompt: (document.getElementById('seoCustomPrompt').value || '').trim(),
+                sections: activeSections.map(sec => {
+                    // showcase, features, whatIs 始终需要生成 imageAlt
+                    const alwaysAlt = ['showcase', 'features', 'whatIs'];
+                    return {
+                        id: sec.id, label: sec.label,
+                        options: sec.options ? { count: sec.options.count, max: sec.options.max } : null,
+                        alt: alwaysAlt.includes(sec.id) ? true : false,
+                    };
+                }),
+                densityTarget,
+                densityTargetSecondary: densityTargetSec,
+                mode: 'generate',
+                includeMetadata: document.getElementById('seoIncludeMetadata').checked,
+                includeBrandInTitle: document.getElementById('seoIncludeBrand').checked,
+                model: selectedModel,
+                styleReferenceUrls: getStyleUrls(),
+                styleMimicMode,
+                styleCrawlEnabled: document.getElementById('seoStyleCrawl').checked,
+            };
+
+            try {
+                const res = await fetch(BACKEND + '/api/seo/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                const data = await res.json();
+                if (!res.ok || data.error) throw new Error(data.error || 'HTTP ' + res.status);
+                // 提取并显示校验报告
+                const validation = data._validation || null;
+                delete data._validation;
+                generatedCopy = data;
+                renderResults(data);
+                document.getElementById('seoExportBtn').disabled = !loadedTemplate;
+                document.getElementById('seoImgGenBtn').disabled = false;
+                // 显示校验结果
+                if (validation) {
+                    _showValidationReport(validation);
+                    const attemptsText = `（自动校验 ${validation.attempts_used} 次）`;
+                    if (validation.passed) {
+                        setStatus('✅ 文案生成成功！密度校验通过 ' + attemptsText + (loadedTemplate ? '' : '（模板加载中...）'));
+                        toast('文案生成成功，密度校验通过', 'success');
+                    } else {
+                        setStatus('⚠️ 文案已生成但密度校验未完全通过 ' + attemptsText + '，请手动调整或重新生成');
+                        toast('密度校验未通过，请检查报告', 'error');
+                    }
+                } else {
+                    setStatus('✅ 文案生成成功！' + (loadedTemplate ? '' : '（模板加载中...）'));
+                    toast('文案生成成功', 'success');
+                }
+            } catch (e) {
+                setStatus('❌ ' + e.message);
+                toast('生成失败：' + e.message, 'error');
+            } finally {
+                btn.disabled = false; btn.textContent = '✨ 生成 SEO 文案';
+                document.getElementById('seoDensityBtn').disabled = false;
+                document.getElementById('seoCopyAllBtn').disabled = false;
+            }
+        });
+
+        // ── 导出 ──
+        document.getElementById('seoExportBtn').addEventListener('click', function() {
+            if (!generatedCopy) { toast('请先生成 SEO 文案', 'error'); return; }
+            if (!loadedTemplate) { toast('模板尚未加载', 'error'); return; }
+            const coreKeyword = seoCorKw.value.trim();
+            const ctaUrl = getCtaUrl();
+            const output = fillTemplate(generatedCopy, loadedTemplate, ctaUrl);
+            const blob = new Blob([JSON.stringify(output, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'coloring_seo_' + (coreKeyword || 'output').replace(/\s+/g, '_') + '_' + Date.now() + '.json';
+            document.body.appendChild(a); a.click(); a.remove();
+            URL.revokeObjectURL(url);
+            toast('导出成功', 'success');
+        });
+
+        function setStatus(msg) { document.getElementById('seoStatusMsg').textContent = msg; }
+        function showErr(msg) { const el = document.getElementById('seoErrorMsg'); el.textContent = msg; el.style.display = ''; }
+        function hideErr() { document.getElementById('seoErrorMsg').style.display = 'none'; }
+
+        // ── 初始化 ──
+        renderSectionList();
+        loadProjectTemplate(currentProject).then(() => {
+            if (loadedTemplate) document.getElementById('seoExportBtn').disabled = !generatedCopy;
+        });
+
+        /* ═══════════════ Section 图片生成子页 ═══════════════ */
+        const IMG_GEN_SECTIONS = [
+            { id: 'whatIs', label: 'What Is (IP7)', type: 'single', desc: '页面首屏大图，基于 imageAlt 生成一张主图' },
+            { id: 'showcase', label: 'Showcase (IP6)', type: 'cards', desc: '展示卡片配图，基于每张卡片的 imageAlt 分别生成' },
+            { id: 'features', label: 'Features (IP9)', type: 'cards', desc: '功能卡片配图，基于每个功能的 imageAlt 分别生成' },
+        ];
+
+        const imgGenTool = document.getElementById('seoImgGenTool');
+        const seoTool = document.getElementById('seoImportTool');
+
+        // 存储生成的图片结果
+        let imgGenResults = {};
+
+        function showImgGenPage() {
+            if (!generatedCopy) { toast('请先生成 SEO 文案', 'error'); return; }
+            console.log('[imggen] generatedCopy keys:', Object.keys(generatedCopy));
+            console.log('[imggen] generatedCopy:', JSON.stringify(generatedCopy).slice(0, 500));
+            seoTool.style.display = 'none';
+            imgGenTool.style.display = 'block';
+            document.getElementById('imgGenKeyword').textContent = seoCorKw.value.trim() || '-';
+            renderImgGenSections();
+        }
+
+        function hideImgGenPage() {
+            imgGenTool.style.display = 'none';
+            seoTool.style.display = '';
+        }
+
+        function renderImgGenSections() {
+            const list = document.getElementById('imgGenSectionList');
+            list.innerHTML = '';
+            console.log('[imggen] rendering sections, IMG_GEN_SECTIONS:', IMG_GEN_SECTIONS.length);
+
+            IMG_GEN_SECTIONS.forEach(secDef => {
+                const content = generatedCopy[secDef.id];
+                console.log('[imggen] section', secDef.id, 'content type:', typeof content, 'truthy:', !!content);
+                if (!content) return;
+                const normalized = typeof content === 'string' ? (() => { try { return JSON.parse(content); } catch { return null; } })() : content;
+                console.log('[imggen] section', secDef.id, 'normalized:', normalized ? Object.keys(normalized) : null);
+                if (!normalized) return;
+
+                const card = document.createElement('div');
+                card.className = 'imggen-section-card';
+                card.dataset.sectionId = secDef.id;
+
+                const header = document.createElement('div');
+                header.className = 'sec-header';
+                const titleWrap = document.createElement('div');
+                titleWrap.className = 'sec-title';
+                const cb = document.createElement('input');
+                cb.type = 'checkbox'; cb.checked = true; cb.className = 'imggen-sec-cb';
+                cb.dataset.sectionId = secDef.id;
+                titleWrap.appendChild(cb);
+                titleWrap.appendChild(document.createTextNode(secDef.label));
+                const badge = document.createElement('span');
+                badge.className = 'sec-badge';
+                badge.textContent = secDef.type === 'single' ? '单图' : '多图';
+                titleWrap.appendChild(badge);
+                header.appendChild(titleWrap);
+                card.appendChild(header);
+
+                const desc = document.createElement('div');
+                desc.className = 'sec-desc';
+                desc.textContent = secDef.desc;
+                card.appendChild(desc);
+
+                // 项目列表
+                const itemsDiv = document.createElement('div');
+                itemsDiv.className = 'sec-items';
+
+                if (secDef.type === 'single') {
+                    // What Is：单张图
+                    const alt = normalized.imageAlt || '';
+                    itemsDiv.appendChild(_buildImgItem(secDef.id, 0, 'What Is 主图', alt));
+                } else {
+                    // Showcase / Features：多张卡片
+                    const items = normalized.items || [];
+                    items.forEach((item, i) => {
+                        const label = item.title || ('Card ' + (i + 1));
+                        const alt = item.imageAlt || '';
+                        itemsDiv.appendChild(_buildImgItem(secDef.id, i, label, alt));
+                    });
+                }
+
+                card.appendChild(itemsDiv);
+                list.appendChild(card);
+            });
+        }
+
+        function _buildImgItem(sectionId, index, label, altText) {
+            const div = document.createElement('div');
+            div.className = 'imggen-item';
+            div.dataset.sectionId = sectionId;
+            div.dataset.index = index;
+            const key = sectionId + '_' + index;
+
+            // 勾选框 + 标签行
+            const cbRow = document.createElement('div');
+            cbRow.className = 'item-cb-row';
+            const cb = document.createElement('input');
+            cb.type = 'checkbox'; cb.checked = true;
+            cb.className = 'imggen-item-cb'; cb.dataset.key = key;
+            cbRow.appendChild(cb);
+            const lbl = document.createElement('span');
+            lbl.className = 'item-label'; lbl.textContent = label;
+            cbRow.appendChild(lbl);
+            div.appendChild(cbRow);
+
+            const alt = document.createElement('div');
+            alt.className = 'item-alt';
+            alt.textContent = altText ? 'Alt: ' + altText : '（无 Alt 文本）';
+            div.appendChild(alt);
+
+            const imgWrap = document.createElement('div');
+            imgWrap.className = 'item-img-wrap';
+            imgWrap.id = 'imgWrap_' + key;
+            if (imgGenResults[key]) {
+                const img = document.createElement('img');
+                img.src = imgGenResults[key].imageUrl || imgGenResults[key];
+                imgWrap.appendChild(img);
+            } else {
+                const ph = document.createElement('span');
+                ph.className = 'placeholder'; ph.textContent = '待生成';
+                imgWrap.appendChild(ph);
+            }
+            div.appendChild(imgWrap);
+
+            const status = document.createElement('div');
+            status.className = 'item-status';
+            status.id = 'imgStatus_' + key;
+            status.textContent = imgGenResults[key] ? '✅ 已生成' : '⏳ 等待生成';
+            if (imgGenResults[key]) status.classList.add('done');
+            div.appendChild(status);
+
+            // 单张重生按钮
+            const regenBtn = document.createElement('button');
+            regenBtn.className = 'item-regen-btn';
+            regenBtn.textContent = '🔄 重生';
+            regenBtn.dataset.key = key;
+            regenBtn.addEventListener('click', function() { regenSingleImage(key); });
+            div.appendChild(regenBtn);
+
+            return div;
+        }
+
+        // 全选控制
+        document.getElementById('imgGenSelectAll').addEventListener('change', function() {
+            document.querySelectorAll('.imggen-sec-cb').forEach(cb => cb.checked = this.checked);
+        });
+
+        // 点击「生成图片」按钮 → 打开图片生成页
+        document.getElementById('seoImgGenBtn').addEventListener('click', showImgGenPage);
+
+        // 返回按钮
+        document.getElementById('imgGenBackBtn').addEventListener('click', hideImgGenPage);
+        document.getElementById('imgGenBackBtn2').addEventListener('click', hideImgGenPage);
+
+        // ── 收集待生成项的公共函数 ──
+        function _collectImgItems(filterKeys) {
+            const checkedSections = Array.from(document.querySelectorAll('.imggen-sec-cb:checked')).map(cb => cb.dataset.sectionId);
+            const items = [];
+            checkedSections.forEach(secId => {
+                const content = generatedCopy[secId];
+                if (!content) return;
+                const normalized = typeof content === 'string' ? (() => { try { return JSON.parse(content); } catch { return null; } })() : content;
+                if (!normalized) return;
+                const secDef = IMG_GEN_SECTIONS.find(s => s.id === secId);
+                if (secDef.type === 'single') {
+                    const textContent = [
+                        normalized.h2 && ('Title: ' + normalized.h2),
+                        normalized.description && ('Description: ' + normalized.description),
+                        normalized.imageAlt && ('ImageAlt: ' + normalized.imageAlt),
+                    ].filter(Boolean).join('\n');
+                    items.push({ sectionId: secId, index: 0, label: secDef.label, content: textContent });
+                } else {
+                    (normalized.items || []).forEach((item, i) => {
+                        const label = item.title || ('Card ' + (i + 1));
+                        const textContent = [
+                            item.title && ('Title: ' + item.title),
+                            item.description && ('Description: ' + item.description),
+                            item.description2 && ('Description2: ' + item.description2),
+                            item.imageAlt && ('ImageAlt: ' + item.imageAlt),
+                        ].filter(Boolean).join('\n');
+                        items.push({ sectionId: secId, index: i, label: secDef.label + ' - ' + label, content: textContent });
+                    });
+                }
+            });
+            if (filterKeys) {
+                return items.filter(it => filterKeys.includes(it.sectionId + '_' + it.index));
+            }
+            return items;
+        }
+
+        // ── 生成单个图片（调用后端单项接口） ──
+        async function _generateOneImage(apiKey, item) {
+            const key = item.sectionId + '_' + item.index;
+            const statusEl = document.getElementById('imgStatus_' + key);
+            const imgWrap = document.getElementById('imgWrap_' + key);
+            if (statusEl) { statusEl.textContent = '🔄 生成中...'; statusEl.className = 'item-status loading'; }
+
+            // 读取生图平台选择
+            const providerEl = document.querySelector('input[name="imgGenProvider"]:checked');
+            const provider = providerEl ? providerEl.value : 'apimart';
+            const bodyData = {
+                apiKey: apiKey,
+                sectionId: item.sectionId,
+                index: item.index,
+                label: item.label,
+                content: item.content,
+                provider: provider,
+            };
+            if (provider === 'kie') {
+                const kieEl = document.getElementById('kieKeyInput');
+                const kieKey = kieEl ? kieEl.value.trim() : '';
+                bodyData.kieApiKey = kieKey || sessionStorage.getItem('kie_api_key') || '';
+            }
+
+            const resp = await fetch(BACKEND + '/api/seo/generate-image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(bodyData),
+            });
+
+            const data = await resp.json();
+            if (!resp.ok || data.error) {
+                const err = data.error || ('HTTP ' + resp.status);
+                if (statusEl) { statusEl.textContent = '❌ ' + err; statusEl.className = 'item-status error'; }
+                throw new Error(err);
+            }
+
+            // 保存结果并显示预览
+            imgGenResults[key] = { imageUrl: data.imageUrl, prompt: data.prompt, sectionId: item.sectionId, index: item.index, label: item.label };
+            if (imgWrap) {
+                imgWrap.innerHTML = '';
+                const img = document.createElement('img');
+                img.src = data.imageUrl;
+                imgWrap.appendChild(img);
+            }
+            if (statusEl) { statusEl.textContent = '✅ 已生成'; statusEl.className = 'item-status done'; }
+            // 启用下载按钮
+            document.getElementById('imgGenDownloadBtn').disabled = false;
+            return data;
+        }
+
+        // ── 批量生成（并发，最多 3 路同时） ──
+        async function _batchGenerate(items) {
+            const apiKey = getApiKey();
+            if (!apiKey) { toast('请先设置 API Key', 'error'); return; }
+            if (items.length === 0) { toast('没有可生成的项', 'error'); return; }
+
+            const allBtns = [document.getElementById('imgGenAllBtn'), document.getElementById('imgGenSelectedBtn')];
+            allBtns.forEach(b => { b.disabled = true; });
+            document.getElementById('imgGenAllBtn').textContent = '⏳ 生成中...';
+            const progress = document.getElementById('imgGenProgress');
+            let done = 0, fail = 0;
+            const total = items.length;
+            const CONCURRENCY = 3;
+
+            const updateProgress = () => {
+                progress.textContent = '进度 ' + (done + fail) + '/' + total + '（✅' + done + ' ❌' + fail + '）...';
+            };
+
+            // 并发池
+            let cursor = 0;
+            const runNext = async () => {
+                while (cursor < total) {
+                    const idx = cursor++;
+                    const item = items[idx];
+                    try {
+                        await _generateOneImage(apiKey, item);
+                        done++;
+                    } catch (e) {
+                        fail++;
+                    }
+                    updateProgress();
+                }
+            };
+
+            const workers = [];
+            for (let i = 0; i < Math.min(CONCURRENCY, total); i++) {
+                workers.push(runNext());
+            }
+            await Promise.all(workers);
+
+            progress.textContent = '✅ 完成 ' + done + '/' + total + (fail ? '（' + fail + ' 个失败）' : '');
+            toast('图片生成完成：' + done + ' 成功' + (fail ? '，' + fail + ' 失败' : ''), done > 0 ? 'success' : 'error');
+            allBtns.forEach(b => { b.disabled = false; });
+            document.getElementById('imgGenAllBtn').textContent = '🚀 生成全部图片';
+        }
+
+        // ── 生成全部图片 ──
+        document.getElementById('imgGenAllBtn').addEventListener('click', function() {
+            const items = _collectImgItems();
+            _batchGenerate(items);
+        });
+
+        // ── 重生选中图片 ──
+        document.getElementById('imgGenSelectedBtn').addEventListener('click', function() {
+            const checkedKeys = Array.from(document.querySelectorAll('.imggen-item-cb:checked')).map(cb => cb.dataset.key);
+            if (checkedKeys.length === 0) { toast('请勾选需要重生的图片', 'error'); return; }
+            const items = _collectImgItems(checkedKeys);
+            _batchGenerate(items);
+        });
+
+        // ── 单张重生 ──
+        async function regenSingleImage(key) {
+            const allItems = _collectImgItems();
+            const item = allItems.find(it => (it.sectionId + '_' + it.index) === key);
+            if (!item) { toast('找不到该项', 'error'); return; }
+            const apiKey = getApiKey();
+            if (!apiKey) { toast('请先设置 API Key', 'error'); return; }
+            const progress = document.getElementById('imgGenProgress');
+            progress.textContent = '正在重生：' + item.label + '...';
+            try {
+                await _generateOneImage(apiKey, item);
+                progress.textContent = '✅ 重生完成：' + item.label;
+                toast('重生完成', 'success');
+            } catch (e) {
+                progress.textContent = '❌ 重生失败：' + e.message;
+                toast('重生失败：' + e.message, 'error');
+            }
+        }
+
+        // ── 打包下载 ZIP ──
+        document.getElementById('imgGenDownloadBtn').addEventListener('click', async function() {
+            const items = [];
+            for (const [key, val] of Object.entries(imgGenResults)) {
+                if (val && val.imageUrl) {
+                    items.push(val);
+                }
+            }
+            if (items.length === 0) { toast('没有已生成的图片', 'error'); return; }
+
+            const apiKey = getApiKey();
+            const btn = this;
+            btn.disabled = true; btn.textContent = '⏳ 打包中...';
+
+            try {
+                const resp = await fetch(BACKEND + '/api/seo/pack-images', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        apiKey: apiKey,
+                        coreKeyword: seoCorKw.value.trim(),
+                        items: items,
+                    }),
+                });
+                if (!resp.ok) {
+                    let errMsg = 'HTTP ' + resp.status;
+                    try { const errData = await resp.json(); errMsg = errData.error || errMsg; } catch {}
+                    throw new Error(errMsg);
+                }
+                const blob = await resp.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                const kw = (seoCorKw.value.trim() || 'seo').replace(/\s+/g, '_');
+                a.download = 'seo_images_' + kw + '_' + Date.now() + '.zip';
+                document.body.appendChild(a); a.click(); a.remove();
+                URL.revokeObjectURL(url);
+                toast('ZIP 已下载', 'success');
+            } catch (e) {
+                toast('打包失败：' + e.message, 'error');
+            } finally {
+                btn.disabled = false; btn.textContent = '📦 打包下载 ZIP';
+            }
+        });
+
+    })();
 
     /* ═══════════════ 初始化 ═══════════════ */
     openDB().then(async () => {
@@ -2430,6 +4233,7 @@ window.onerror = function(msg, src, line, col, err) {
 </script>
 </body>
 </html>
+
 
 
 
