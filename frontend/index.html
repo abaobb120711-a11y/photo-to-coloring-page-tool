@@ -284,6 +284,43 @@
         .btn-retry { background: #fff7e6; color: #fa8c16; }
         .btn-retry:hover { background: #ffe7ba; }
 
+        /* ── 文生图面板 ── */
+        .txt2img-panel {
+            background: #fff; border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.06); margin-bottom: 16px; overflow: hidden;
+        }
+        .txt2img-toggle {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 20px; cursor: pointer; font-weight: 600; font-size: 14px;
+            color: #555; user-select: none; border-bottom: 1px solid transparent;
+        }
+        .txt2img-toggle:hover { background: #fafafa; }
+        .txt2img-toggle.open { border-bottom-color: #f0f0f0; }
+        .txt2img-body { padding: 16px 20px; }
+        .txt2img-body textarea {
+            width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px;
+            font-size: 13px; resize: vertical; min-height: 90px; box-sizing: border-box;
+            font-family: inherit; line-height: 1.6; color: #333;
+        }
+        .txt2img-body textarea:focus { outline: none; border-color: #667eea; }
+        .txt2img-prompt-card {
+            background: #f8f8ff; border: 1px solid #d0d0ff; border-radius: 8px;
+            padding: 10px 14px; margin-bottom: 8px;
+        }
+        .txt2img-prompt-card-num {
+            font-size: 11px; font-weight: 700; color: #764ba2; margin-bottom: 4px;
+        }
+        .txt2img-prompt-card textarea {
+            min-height: 60px; background: transparent; border: none; padding: 0;
+            font-size: 12px; color: #444; margin: 0;
+        }
+        .txt2img-prompt-card textarea:focus { border: none; box-shadow: none; }
+        .gen-prompt-text {
+            padding: 12px; font-size: 11px; color: #666; line-height: 1.6;
+            overflow: auto; max-height: 200px; word-break: break-word; width: 100%;
+            box-sizing: border-box;
+        }
+
         .gen-card.selected { outline: 3px solid #667eea; outline-offset: -3px; }
         .gen-card .gen-card-footer .gen-checkbox-label {
             display: flex; align-items: center; gap: 4px;
@@ -804,6 +841,28 @@
 <!-- ═══════════════ 第二页: AI 生成填色页 ═══════════════ -->
 <div class="page" id="page2">
 <div class="container">
+    <!-- 文生图面板 -->
+    <div class="txt2img-panel" id="txt2imgPanel">
+        <div class="txt2img-toggle" id="txt2imgToggleBtn">
+            <span>✏️ 文生图 · 根据提示词批量生成填色页</span>
+            <span id="txt2imgToggleArrow">▶</span>
+        </div>
+        <div class="txt2img-body" id="txt2imgBody" style="display:none">
+            <textarea id="txt2imgPrompt" placeholder="输入基础提示词，例如: A cute cartoon bear wearing a hat, children coloring page, thick black outlines, pure white background..."></textarea>
+            <div class="api-row" style="margin-top:10px;flex-wrap:wrap;gap:10px">
+                <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#555">
+                    生成数量：
+                    <input type="number" id="txt2imgCount" value="4" min="1" max="20" style="width:70px;padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:14px" />
+                </label>
+                <button class="btn-gen-all" id="txt2imgExpandBtn">AI 扩写提示词</button>
+            </div>
+            <div id="txt2imgPromptsArea" style="display:none;margin-top:12px"></div>
+            <div style="text-align:right;margin-top:10px">
+                <button class="btn-gen-all" id="txt2imgGenBtn" style="display:none;background:linear-gradient(135deg,#52c41a,#237804)">🖼️ 开始文生图</button>
+            </div>
+        </div>
+    </div>
+
     <div class="gen-toolbar">
         <div class="gen-info">
             共 <strong id="genTotalCount">0</strong> 张原图
@@ -1773,6 +1832,99 @@ window.onerror = function(msg, src, line, col, err) {
 
     backToP1Btn.addEventListener('click', () => showPage(1));
 
+    // ══ 文生图面板事件 ══
+    document.getElementById('txt2imgToggleBtn').addEventListener('click', () => {
+        const body = document.getElementById('txt2imgBody');
+        const arrow = document.getElementById('txt2imgToggleArrow');
+        const btn = document.getElementById('txt2imgToggleBtn');
+        const isOpen = body.style.display !== 'none';
+        body.style.display = isOpen ? 'none' : 'block';
+        arrow.textContent = isOpen ? '▶' : '▼';
+        btn.classList.toggle('open', !isOpen);
+    });
+
+    let txt2imgExpandedPrompts = [];
+
+    document.getElementById('txt2imgExpandBtn').addEventListener('click', async () => {
+        const expandBtn = document.getElementById('txt2imgExpandBtn');
+        const basePrompt = document.getElementById('txt2imgPrompt').value.trim();
+        const count = Math.max(1, Math.min(20, +document.getElementById('txt2imgCount').value || 4));
+        if (!basePrompt) { toast('请输入基础提示词', 'error'); return; }
+        const apimartKey = getApiKey();
+        if (!apimartKey) { toast('请先在首页设置 Apimart API Key', 'error'); return; }
+        expandBtn.disabled = true;
+        expandBtn.textContent = '正在生成提示词...';
+        const area = document.getElementById('txt2imgPromptsArea');
+        area.style.display = 'none';
+        area.innerHTML = '';
+        try {
+            const resp = await fetch(BACKEND + '/api/expand-prompts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ apiKey: apimartKey, basePrompt, count })
+            });
+            const data = await resp.json();
+            if (!resp.ok || data.error) throw new Error(data.error || '扩写失败');
+            txt2imgExpandedPrompts = data.prompts || [];
+            area.innerHTML = `<div style="font-size:13px;color:#888;margin-bottom:10px">已生成 ${txt2imgExpandedPrompts.length} 条提示词，可手动修改后开始生图：</div>`;
+            txt2imgExpandedPrompts.forEach((p, i) => {
+                const card = document.createElement('div');
+                card.className = 'txt2img-prompt-card';
+                card.innerHTML = `<div class="txt2img-prompt-card-num">提示词 ${i + 1}</div>`;
+                const ta = document.createElement('textarea');
+                ta.value = p;
+                ta.rows = 3;
+                ta.style.cssText = 'width:100%;border:none;background:transparent;font-size:12px;color:#444;resize:vertical;outline:none;font-family:inherit;line-height:1.6;box-sizing:border-box;';
+                ta.addEventListener('input', () => { txt2imgExpandedPrompts[i] = ta.value; });
+                card.appendChild(ta);
+                area.appendChild(card);
+            });
+            area.style.display = 'block';
+            document.getElementById('txt2imgGenBtn').style.display = 'inline-block';
+            toast(`提示词扩写完成，可直接开始生图`, 'success');
+        } catch (e) {
+            toast('扩写失败：' + e.message, 'error');
+        } finally {
+            expandBtn.disabled = false;
+            expandBtn.textContent = 'AI 扩写提示词';
+        }
+    });
+
+    document.getElementById('txt2imgGenBtn').addEventListener('click', async () => {
+        if (!txt2imgExpandedPrompts.length) { toast('请先扩写提示词', 'error'); return; }
+        const platform = getSelectedPlatform();
+        const apiKey = getImageApiKey();
+        if (!apiKey) { toast('请先在首页设置对应平台的 API Key', 'error'); return; }
+        const startIdx = genItems.length;
+        txt2imgExpandedPrompts.forEach((p, i) => {
+            genItems.push({
+                src: null, alt: '文生图_' + (i + 1), _b64: null,
+                _txt2img: true, _prompt: p,
+                status: 'pending', taskId: null, resultUrl: null, resultB64: null,
+                error: null, platform: platform
+            });
+        });
+        renderGenGallery();
+        updateGenInfo();
+        genProgress.classList.add('visible');
+        isGenerating = true;
+        const indices = Array.from({ length: txt2imgExpandedPrompts.length }, (_, i) => startIdx + i);
+        let cursor = 0;
+        async function runTxt2ImgNext() {
+            while (cursor < indices.length) {
+                const idx = indices[cursor++];
+                await generateOne(idx, apiKey);
+                updateProgress();
+            }
+        }
+        const workers = [];
+        for (let i = 0; i < Math.min(CONCURRENCY, indices.length); i++) workers.push(runTxt2ImgNext());
+        await Promise.all(workers);
+        isGenerating = false;
+        toast('文生图完成', 'success');
+        saveAppState();
+    });
+
     function updateGenSelectedInfo() {
         const checked = genGallery.querySelectorAll('.gen-card-checkbox:checked');
         genSelectedInfo.textContent = checked.length > 0 ? `，已选中 ${checked.length} 张` : '';
@@ -1908,6 +2060,13 @@ window.onerror = function(msg, src, line, col, err) {
         return getApiKey();
     }
 
+    function getKieKey() {
+        const el = document.getElementById('kieKeyInput');
+        const k = el ? el.value.trim() : '';
+        if (k) sessionStorage.setItem('kie_api_key', k);
+        return k || sessionStorage.getItem('kie_api_key') || '';
+    }
+
     let genPage2Initialized = false;  // 标记第二页是否已初始化过
 
     function initPage2() {
@@ -2017,18 +2176,27 @@ window.onerror = function(msg, src, line, col, err) {
         const pair = document.createElement('div');
         pair.className = 'gen-pair';
 
-        // 左侧：原图
+        // 左侧：原图（txt2img 显示提示词文本）
         const leftSide = document.createElement('div');
         leftSide.className = 'gen-side';
         const leftLabel = document.createElement('div');
         leftLabel.className = 'gen-label';
-        leftLabel.textContent = '原图';
-        const leftImg = document.createElement('img');
-        if (item._b64) { leftImg.src = item._b64; }
-        else if (item.src.startsWith('blob:') || item.src.startsWith('data:')) { leftImg.src = item.src; }
-        else { leftImg.src = BACKEND + '/proxy?url=' + encodeURIComponent(item.src); }
-        leftSide.appendChild(leftLabel);
-        leftSide.appendChild(leftImg);
+        if (item._txt2img) {
+            leftLabel.textContent = '提示词';
+            const promptText = document.createElement('div');
+            promptText.className = 'gen-prompt-text';
+            promptText.textContent = item._prompt || '(无提示词)';
+            leftSide.appendChild(leftLabel);
+            leftSide.appendChild(promptText);
+        } else {
+            leftLabel.textContent = '原图';
+            const leftImg = document.createElement('img');
+            if (item._b64) { leftImg.src = item._b64; }
+            else if (item.src.startsWith('blob:') || item.src.startsWith('data:')) { leftImg.src = item.src; }
+            else { leftImg.src = BACKEND + '/proxy?url=' + encodeURIComponent(item.src); }
+            leftSide.appendChild(leftLabel);
+            leftSide.appendChild(leftImg);
+        }
 
         // 右侧：结果
         const rightSide = document.createElement('div');
@@ -2143,6 +2311,67 @@ window.onerror = function(msg, src, line, col, err) {
     // 提交生成任务
     async function generateOne(idx, apiKey) {
         const item = genItems[idx];
+
+        // 文生图模式：按所选平台调用 txt2img 接口
+        if (item._txt2img) {
+            const platform = getSelectedPlatform();
+            const txt2imgKey = getImageApiKey();
+            if (!txt2imgKey) {
+                item.status = 'error';
+                item.error = '请先在首页设置对应平台的 API Key';
+                refreshGenCard(idx);
+                return;
+            }
+            item.platform = platform;
+            item.status = 'generating';
+            refreshGenCard(idx);
+            try {
+                const resp = await fetch(BACKEND + '/api/txt2img', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ apiKey: txt2imgKey, prompt: item._prompt, platform: platform })
+                });
+                const data = await resp.json();
+                if (!resp.ok || data.error) throw new Error(data.error?.message || data.error || '提交失败');
+                const taskId = data.data?.[0]?.task_id;
+                if (!taskId) throw new Error('未获取到任务 ID');
+                item.taskId = taskId;
+
+                // OneAPI 同步模式
+                if (taskId.startsWith('oneapi_done__')) {
+                    const imgUrl = taskId.replace('oneapi_done__', '');
+                    item.resultUrl = imgUrl;
+                    try {
+                        const proxyUrl = imgUrl.startsWith('data:') ? imgUrl : BACKEND + '/proxy?url=' + encodeURIComponent(imgUrl);
+                        const imgResp = await fetch(proxyUrl);
+                        const blob = await imgResp.blob();
+                        item.resultB64 = await new Promise(resolve => {
+                            const reader = new FileReader();
+                            reader.onloadend = () => resolve(reader.result);
+                            reader.readAsDataURL(blob);
+                        });
+                    } catch { /* URL fallback */ }
+                    item.status = 'done';
+                    refreshGenCard(idx);
+                    saveAppState();
+                    updateProgress();
+                    return;
+                }
+
+                item.status = 'polling';
+                refreshGenCard(idx);
+                saveAppState();
+                await pollTask(idx, txt2imgKey, platform);
+            } catch (e) {
+                item.status = 'error';
+                item.error = e.message;
+                refreshGenCard(idx);
+                saveAppState();
+            }
+            updateProgress();
+            return;
+        }
+
         const platform = getSelectedPlatform();
         item.platform = platform;
         item.status = 'generating';
@@ -3778,7 +4007,7 @@ window.onerror = function(msg, src, line, col, err) {
                 delete data._validation;
                 generatedCopy = data;
                 renderResults(data);
-                document.getElementById('seoExportBtn').disabled = !loadedTemplate;
+                document.getElementById('seoExportBtn').disabled = false;
                 document.getElementById('seoImgGenBtn').disabled = false;
                 // 显示校验结果
                 if (validation) {
@@ -3808,10 +4037,9 @@ window.onerror = function(msg, src, line, col, err) {
         // ── 导出 ──
         document.getElementById('seoExportBtn').addEventListener('click', function() {
             if (!generatedCopy) { toast('请先生成 SEO 文案', 'error'); return; }
-            if (!loadedTemplate) { toast('模板尚未加载', 'error'); return; }
             const coreKeyword = seoCorKw.value.trim();
             const ctaUrl = getCtaUrl();
-            const output = fillTemplate(generatedCopy, loadedTemplate, ctaUrl);
+            const output = loadedTemplate ? fillTemplate(generatedCopy, loadedTemplate, ctaUrl) : generatedCopy;
             const blob = new Blob([JSON.stringify(output, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -3829,7 +4057,7 @@ window.onerror = function(msg, src, line, col, err) {
         // ── 初始化 ──
         renderSectionList();
         loadProjectTemplate(currentProject).then(() => {
-            if (loadedTemplate) document.getElementById('seoExportBtn').disabled = !generatedCopy;
+            document.getElementById('seoExportBtn').disabled = !generatedCopy;
         });
 
         /* ═══════════════ Section 图片生成子页 ═══════════════ */
@@ -4233,6 +4461,7 @@ window.onerror = function(msg, src, line, col, err) {
 </script>
 </body>
 </html>
+
 
 
 
