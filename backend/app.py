@@ -69,6 +69,49 @@ COLORING_PROMPT = (
     "landscapes, or objects not present in the original reference image."
 )
 
+EXPAND_PROMPTS_SYSTEM_TEMPLATE = """你是一名专业的儿童填色页生图提示词改写助手。
+
+你的任务是根据我提供的原始生图提示词，生成多条新的提示词变体。
+
+目标：
+保持原提示词中的角色核心形象、身体结构、脸部比例、轮廓特征、整体风格一致，只修改以下可变元素：
+- 动作 / 姿势
+- 面部表情
+- 着装 / 配饰
+- 道具
+- 环境 / 场景细节
+- 主题 / 情境
+
+严格要求：
+1. 不要改变角色的核心外形、物种设定、身体比例、标志性特征、整体轮廓和固定角色身份。
+2. 保持原提示词中的绘画风格一致。
+3. 每一条改写后的提示词，都必须是一个明确不同的场景版本。
+4. 所有变体都要像是"同一个角色在一本系列填色书中的不同画面"。
+5. 保留原提示词中所有与填色页相关的约束，例如：黑白线稿、粗黑线条、无阴影、纯白背景、可打印、儿童填色页风格等。
+6. 不要解释，不要分析，不要加说明文字。
+7. 只输出最终改写后的提示词。
+8. 输出语言为英文。
+9. 一共生成 {N} 条不同版本的提示词。
+
+改写重点：
+- 修改角色的动作和姿态
+- 修改角色的情绪和表情
+- 修改服饰、帽子、饰品或穿戴元素
+- 修改道具和简单场景
+- 默认角色全身可见，除非原提示词另有要求
+
+输出格式：
+Prompt 1:
+...
+
+Prompt 2:
+...
+
+提示词3：
+...
+
+现在请根据下面这段原始提示词，生成 {N} 条新的提示词变体："""
+
 RENAME_PROMPT_TEMPLATE = """请帮我重新命名以下 {count} 张填色页图片。
 每个图片命名的格式例子如下：
 [中][29][{theme}][{theme} Listening To Music With Headphones]
@@ -939,6 +982,224 @@ def api_generate():
             except Exception as e:
                 last_err = str(e)
                 print(f'[generate/apimart] {model_name} 异常: {e}, 尝试下一个模型', flush=True)
+        return jsonify({'error': f'Apimart 所有模型均失败: {last_err}'}), 500
+
+
+# ── API：扩写提示词（文生图用）────────────────────────────────
+@app.route('/api/expand-prompts', methods=['POST', 'OPTIONS'])
+def api_expand_prompts():
+    if request.method == 'OPTIONS':
+        return jsonify({}), 200
+    data = request.get_json(silent=True) or {}
+    api_key = (data.get('apiKey') or '').strip()
+    base_prompt = (data.get('basePrompt') or '').strip()
+    count = max(1, int(data.get('count') or 4))
+    if not api_key:
+        return jsonify({'error': 'API Key 不能为空'}), 400
+    if not base_prompt:
+        return jsonify({'error': '基础提示词不能为空'}), 400
+
+    system_prompt = EXPAND_PROMPTS_SYSTEM_TEMPLATE.replace('{N}', str(count))
+    full_prompt = system_prompt + '\n\n' + base_prompt
+    print(f'[expand-prompts] count={count}, prompt_len={len(full_prompt)}, key={api_key[:8]}...', flush=True)
+    try:
+        resp = requests.post(
+            'https://api.apimart.ai/v1/chat/completions',
+            headers={
+                'Authorization': f'Bearer {api_key}',
+                'Content-Type': 'application/json'
+            },
+            json={
+                'model': 'claude-haiku-4-5-20251001',
+                'messages': [
+                    {'role': 'system', 'content': '你是一名专业的儿童填色页生图提示词改写助手。只输出改写后的提示词，不要任何解释。输出语言为英文。'},
+                    {'role': 'user', 'content': full_prompt}
+                ],
+                'temperature': 0.8,
+                'stream': False
+            },
+            timeout=180
+        )
+        raw = resp.text
+        print(f'[expand-prompts] HTTP {resp.status_code}, raw[:500]: {raw[:500]}', flush=True)
+
+        # 解析响应 — 兼容 SSE 流式格式
+        try:
+            body = json.loads(raw)
+        except json.JSONDecodeError:
+            body = _try_parse_sse_response(raw)
+            if body is None:
+                return jsonify({'error': f'API 返回非 JSON: {raw[:300]}'}), 400
+
+        # 提取 content — 兼容两种格式:
+        # 格式1: {"code":200,"data":{"choices":[{"message":{"content":"..."}}]}}
+        # 格式2: {"choices":[{"message":{"content":"..."}}]}
+        if body.get('error'):
+            err = body['error']
+            msg = err.get('message', str(err)) if isinstance(err, dict) else str(err)
+            return jsonify({'error': msg}), 400
+
+        content = ''
+        # 先试 data.choices
+        try:
+            content = body['data']['choices'][0]['message']['content']
+        except (KeyError, IndexError, TypeError):
+            pass
+        # 再试顶层 choices
+        if not content:
+            try:
+                content = body['choices'][0]['message']['content']
+            except (KeyError, IndexError, TypeError):
+                pass
+        if not content:
+            return jsonify({'error': f'AI 返回内容为空，原始响应: {raw[:300]}'}), 400
+
+        print(f'[expand-prompts] content_len={len(content)}, preview: {content[:500]}', flush=True)
+
+        # 解析 "Prompt N:" 或 "提示词N：" 格式
+        blocks = re.split(r'(?:Prompt|提示词)\s*\d+\s*[：:]\s*', content.strip())
+        prompts = [b.strip() for b in blocks if b.strip() and len(b.strip()) > 20]
+        if not prompts:
+            paragraphs = [p.strip() for p in re.split(r'\n{2,}', content.strip()) if p.strip()]
+            prompts = [p for p in paragraphs if len(p) > 20]
+        if not prompts:
+            prompts = [line.strip() for line in content.split('\n') if line.strip() and len(line.strip()) > 20]
+        prompts = prompts[:count]
+        print(f'[expand-prompts] parsed {len(prompts)} prompts', flush=True)
+        if not prompts:
+            return jsonify({'error': f'AI 返回了内容但未能解析出提示词，原始内容：{content[:300]}'}), 400
+        return jsonify({'prompts': prompts}), 200
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'扩写提示词失败: {e}'}), 500
+
+
+# ── API：文生图（KIE nano-banana，纯文本提示词）──────────────────
+@app.route('/api/txt2img', methods=['POST', 'OPTIONS'])
+def api_txt2img():
+    if request.method == 'OPTIONS':
+        return jsonify({}), 200
+    data = request.get_json(silent=True) or {}
+    api_key = (data.get('apiKey') or '').strip()
+    prompt = (data.get('prompt') or '').strip()
+    platform = (data.get('platform') or 'apimart').strip().lower()
+    if not api_key:
+        return jsonify({'error': 'API Key 不能为空'}), 400
+    if not prompt:
+        return jsonify({'error': '提示词不能为空'}), 400
+
+    size = '2:3'
+
+    if platform == 'oneapi':
+        # ── OneAPI 平台（gpt-4o 文生图，同步返回）──
+        try:
+            chat_resp = requests.post(
+                'https://oneapi.gptnb.ai/v1/chat/completions',
+                headers={
+                    'Authorization': f'Bearer {api_key}',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                json={
+                    'model': 'gpt-4o',
+                    'messages': [
+                        {
+                            'role': 'user',
+                            'content': prompt
+                        }
+                    ],
+                    'max_tokens': 4096,
+                },
+                timeout=180,
+            )
+            chat_body = chat_resp.json()
+            print(f'[txt2img/oneapi] response: {str(chat_body)[:800]}', flush=True)
+            if chat_body.get('error'):
+                return jsonify({'error': chat_body['error'].get('message', 'OneAPI 生成失败')}), 400
+            content = ''
+            choices = chat_body.get('choices') or []
+            if choices:
+                content = (choices[0].get('message') or {}).get('content', '')
+            import re as _re
+            img_urls = _re.findall(r'!\[.*?\]\((https?://[^\s\)]+)\)', content)
+            if not img_urls:
+                img_urls = _re.findall(r'(https?://[^\s\)"\']+\.(?:png|jpg|jpeg|webp|gif))', content)
+            if not img_urls:
+                b64_matches = _re.findall(r'(data:image/[^;]+;base64,[A-Za-z0-9+/=]+)', content)
+                if b64_matches:
+                    img_urls = b64_matches
+            if img_urls:
+                return jsonify({
+                    'data': [{'task_id': f'oneapi_done__{img_urls[0]}'}]
+                }), 200
+            return jsonify({'error': f'OneAPI 返回内容中未找到图片: {content[:300]}'}), 400
+        except Exception as e:
+            return jsonify({'error': f'OneAPI 请求失败: {e}'}), 500
+
+    elif platform == 'kie':
+        # ── KIE.ai 平台（纯文生图，无 image_input）──
+        kie_models = ['nano-banana-2', 'nano-banana-pro']
+        last_err = ''
+        for model_name in kie_models:
+            try:
+                resp = requests.post(
+                    'https://api.kie.ai/api/v1/jobs/createTask',
+                    headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
+                    json={
+                        'model': model_name,
+                        'input': {
+                            'prompt': prompt,
+                            'aspect_ratio': size,
+                            'resolution': '1K',
+                            'output_format': 'jpg'
+                        }
+                    },
+                    timeout=120
+                )
+                kie_body = resp.json()
+                print(f'[txt2img/kie/{model_name}] response: {str(kie_body)[:800]}', flush=True)
+                if kie_body.get('code') == 200:
+                    task_id = (kie_body.get('data') or {}).get('taskId')
+                    if task_id:
+                        return jsonify({'data': [{'task_id': task_id}]}), 200
+                last_err = kie_body.get('msg', f'{model_name} 任务创建失败')
+                print(f'[txt2img/kie] {model_name} 失败: {last_err}, 尝试下一个模型', flush=True)
+            except Exception as e:
+                last_err = str(e)
+                print(f'[txt2img/kie] {model_name} 异常: {e}', flush=True)
+        return jsonify({'error': f'KIE 所有模型均失败: {last_err}'}), 400
+
+    else:
+        # ── Apimart 平台（纯文生图，无 image_urls）──
+        apimart_models = ['gemini-3.1-flash-image-preview', 'gemini-3-pro-image-preview']
+        last_err = ''
+        for model_name in apimart_models:
+            try:
+                resp = requests.post(
+                    'https://api.apimart.ai/v1/images/generations',
+                    headers={
+                        'Authorization': f'Bearer {api_key}',
+                        'Content-Type': 'application/json'
+                    },
+                    json={
+                        'model': model_name,
+                        'prompt': prompt,
+                        'size': size,
+                        'resolution': '1K',
+                        'n': 1
+                    },
+                    timeout=120
+                )
+                body = resp.json()
+                print(f'[txt2img/apimart/{model_name}] status={resp.status_code}, resp: {str(body)[:500]}', flush=True)
+                if resp.status_code == 200 and not body.get('error'):
+                    return jsonify(body), 200
+                last_err = body.get('error', {}).get('message', '') if isinstance(body.get('error'), dict) else str(body.get('error', model_name + ' 失败'))
+                print(f'[txt2img/apimart] {model_name} 失败: {last_err}, 尝试下一个模型', flush=True)
+            except Exception as e:
+                last_err = str(e)
+                print(f'[txt2img/apimart] {model_name} 异常: {e}, 尝试下一个模型', flush=True)
         return jsonify({'error': f'Apimart 所有模型均失败: {last_err}'}), 500
 
 
