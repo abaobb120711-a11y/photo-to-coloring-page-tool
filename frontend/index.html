@@ -852,7 +852,7 @@
             <div class="api-row" style="margin-top:10px;flex-wrap:wrap;gap:10px">
                 <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#555">
                     生成数量：
-                    <input type="number" id="txt2imgCount" value="4" min="1" max="20" style="width:70px;padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:14px" />
+                    <input type="number" id="txt2imgCount" value="4" min="1" style="width:70px;padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:14px" />
                 </label>
                 <button class="btn-gen-all" id="txt2imgExpandBtn">AI 扩写提示词</button>
             </div>
@@ -1322,7 +1322,8 @@ window.onerror = function(msg, src, line, col, err) {
             src: g.src, alt: g.alt, _b64: g._b64 || null,
             resultUrl: g.resultUrl || null, resultB64: g.resultB64 || null,
             status: g.status, error: g.error || null, taskId: g.taskId || null,
-            platform: g.platform || 'apimart'
+            platform: g.platform || 'apimart',
+            _txt2img: g._txt2img || false, _prompt: g._prompt || ''
         }));
         await dbPut('state', sKey('genItems'), genData);
     }
@@ -1339,7 +1340,7 @@ window.onerror = function(msg, src, line, col, err) {
             isConfirmed = confirmed || false;
         }
         if (savedGen && savedGen.length > 0) {
-            genItems = savedGen;
+            genItems = savedGen.filter(g => g.src || g._txt2img);
             genPage2Initialized = true;
         }
         if (page) currentPage = page;
@@ -1848,7 +1849,7 @@ window.onerror = function(msg, src, line, col, err) {
     document.getElementById('txt2imgExpandBtn').addEventListener('click', async () => {
         const expandBtn = document.getElementById('txt2imgExpandBtn');
         const basePrompt = document.getElementById('txt2imgPrompt').value.trim();
-        const count = Math.max(1, Math.min(20, +document.getElementById('txt2imgCount').value || 4));
+        const count = Math.max(1, +document.getElementById('txt2imgCount').value || 4);
         if (!basePrompt) { toast('请输入基础提示词', 'error'); return; }
         const apimartKey = getApiKey();
         if (!apimartKey) { toast('请先在首页设置 Apimart API Key', 'error'); return; }
@@ -1907,6 +1908,9 @@ window.onerror = function(msg, src, line, col, err) {
         renderGenGallery();
         updateGenInfo();
         genProgress.classList.add('visible');
+        // 滚动到新增的第一个槽位
+        const firstNewCard = document.getElementById('gen-card-' + startIdx);
+        if (firstNewCard) firstNewCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
         isGenerating = true;
         const indices = Array.from({ length: txt2imgExpandedPrompts.length }, (_, i) => startIdx + i);
         let cursor = 0;
@@ -2192,8 +2196,8 @@ window.onerror = function(msg, src, line, col, err) {
             leftLabel.textContent = '原图';
             const leftImg = document.createElement('img');
             if (item._b64) { leftImg.src = item._b64; }
-            else if (item.src.startsWith('blob:') || item.src.startsWith('data:')) { leftImg.src = item.src; }
-            else { leftImg.src = BACKEND + '/proxy?url=' + encodeURIComponent(item.src); }
+            else if (item.src && item.src.startsWith('blob:') || item.src && item.src.startsWith('data:')) { leftImg.src = item.src; }
+            else if (item.src) { leftImg.src = BACKEND + '/proxy?url=' + encodeURIComponent(item.src); }
             leftSide.appendChild(leftLabel);
             leftSide.appendChild(leftImg);
         }
